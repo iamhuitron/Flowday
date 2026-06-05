@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>RUTA.DEV — Miguel</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f0f11;
+  --bg2:#1a1a1f;
+  --bg3:#222228;
+  --border:#2e2e38;
+  --text:#e8e8f0;
+  --muted:#6b6b7e;
+  --accent:#7c6aff;
+  --accent2:#ff6a8e;
+  --green:#4ade80;
+  --amber:#fbbf24;
+  --blue:#60a5fa;
+  --mono:'DM Mono',monospace;
+  --sans:'DM Sans',sans-serif;
+}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh;padding:0}
+
+/* LAYOUT */
+.app{display:grid;grid-template-rows:auto 1fr;min-height:100vh}
+.header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.header-left{display:flex;align-items:baseline;gap:10px}
+.logo{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:0.08em}
+.tagline{font-size:12px;color:var(--muted)}
+.streak{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:12px;color:var(--amber)}
+.streak-num{font-size:18px;font-weight:500}
+
+.main{display:grid;grid-template-columns:240px 1fr;height:100%}
+
+/* SIDEBAR */
+.sidebar{border-right:1px solid var(--border);padding:16px 0;display:flex;flex-direction:column;gap:2px}
+.nav-section{padding:8px 16px 4px;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase}
+.nav-item{padding:8px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);border-left:2px solid transparent;transition:all 0.15s}
+.nav-item:hover{background:var(--bg2);color:var(--text)}
+.nav-item.active{background:var(--bg2);color:var(--accent);border-left-color:var(--accent)}
+.nav-item .nav-badge{margin-left:auto;font-family:var(--mono);font-size:10px;background:var(--bg3);color:var(--muted);padding:1px 6px;border-radius:99px}
+.nav-item.active .nav-badge{background:rgba(124,106,255,0.15);color:var(--accent)}
+.phase-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* CONTENT */
+.content{overflow-y:auto;padding:24px}
+
+/* VIEWS */
+.view{display:none}
+.view.active{display:block}
+
+/* TODAY VIEW */
+.today-header{margin-bottom:20px}
+.today-date{font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:4px}
+.today-title{font-size:22px;font-weight:500;color:var(--text)}
+.today-sub{font-size:13px;color:var(--muted);margin-top:2px}
+
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.stat-label{font-size:11px;color:var(--muted);margin-bottom:4px;font-family:var(--mono)}
+.stat-val{font-size:24px;font-weight:500;font-family:var(--mono)}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+.section-title{font-size:11px;font-family:var(--mono);color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;margin-top:20px}
+
+/* HABITS */
+.habits-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:8px}
+.habit-btn{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;text-align:left;transition:all 0.15s;position:relative}
+.habit-btn:hover{border-color:var(--muted)}
+.habit-btn.done{border-color:var(--green);background:rgba(74,222,128,0.06)}
+.habit-btn.done .habit-name{color:var(--green)}
+.habit-name{font-size:13px;color:var(--text);font-weight:500;transition:color 0.15s}
+.habit-streak{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:3px}
+.habit-check{position:absolute;top:10px;right:10px;width:16px;height:16px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;transition:all 0.15s}
+.habit-btn.done .habit-check{background:var(--green);border-color:var(--green);color:#000;font-size:9px}
+
+/* TASKS */
+.task-item{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:6px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;transition:all 0.15s}
+.task-item:hover{border-color:var(--muted)}
+.task-item.done{opacity:0.5}
+.task-cb{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all 0.15s}
+.task-item.done .task-cb{background:var(--accent);border-color:var(--accent);color:#fff;font-size:10px}
+.task-body{flex:1}
+.task-name{font-size:13px;color:var(--text)}
+.task-item.done .task-name{text-decoration:line-through;color:var(--muted)}
+.task-meta{font-size:11px;color:var(--muted);margin-top:2px;font-family:var(--mono)}
+.task-phase{display:inline-block;padding:1px 7px;border-radius:99px;font-size:10px;margin-right:6px}
+
+/* ADD TASK */
+.add-task-row{display:flex;gap:8px;margin-top:10px}
+.add-task-row input,.add-task-row select{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);font-family:var(--sans);outline:none;transition:border 0.15s}
+.add-task-row input{flex:1}
+.add-task-row input:focus,.add-task-row select:focus{border-color:var(--accent)}
+.add-task-row select option{background:var(--bg2)}
+.btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-family:var(--sans);font-weight:500;cursor:pointer;transition:all 0.15s}
+.btn:hover{opacity:0.85}
+.btn.sm{padding:5px 12px;font-size:12px}
+.btn.ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
+.btn.ghost:hover{border-color:var(--muted);color:var(--text)}
+.btn.danger{background:transparent;border:1px solid var(--border);color:var(--accent2)}
+.btn.danger:hover{border-color:var(--accent2)}
+
+/* LOG */
+.log-item{padding:10px 0;border-bottom:1px solid var(--border);display:flex;gap:14px;align-items:flex-start}
+.log-date{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap;padding-top:2px;min-width:80px}
+.log-text{font-size:13px;color:var(--text)}
+.log-tag{font-size:10px;padding:1px 7px;border-radius:99px;background:rgba(124,106,255,0.12);color:var(--accent);margin-left:8px}
+
+/* PHASES VIEW */
+.phase-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:12px}
+.phase-card-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.phase-card-title{font-size:15px;font-weight:500;flex:1}
+.phase-pct{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.progress-bar{height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-bottom:14px}
+.progress-fill{height:100%;border-radius:2px;transition:width 0.4s ease}
+.milestone-text{font-size:12px;color:var(--muted);padding:8px 12px;background:var(--bg3);border-radius:6px;border-left:2px solid var(--accent)}
+
+/* LOGROS VIEW */
+.logro-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.logro-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;transition:all 0.15s}
+.logro-card.earned{border-color:var(--amber);background:rgba(251,191,36,0.05)}
+.logro-icon{font-size:28px;margin-bottom:8px}
+.logro-name{font-size:13px;font-weight:500;margin-bottom:4px}
+.logro-desc{font-size:11px;color:var(--muted)}
+.logro-card.locked .logro-icon{filter:grayscale(1);opacity:0.3}
+.logro-card.locked .logro-name,.logro-card.locked .logro-desc{color:var(--muted)}
+
+/* ADD LOG */
+.log-input-row{display:flex;gap:8px;margin-bottom:16px}
+.log-input-row input{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);font-family:var(--sans);outline:none}
+.log-input-row input:focus{border-color:var(--accent)}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:32px;color:var(--muted);font-size:13px}
+.empty-icon{font-size:32px;margin-bottom:8px;opacity:0.4}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  .main{grid-template-columns:1fr}
+  .sidebar{display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="header-left">
+      <span class="logo">RUTA.DEV</span>
+      <span class="tagline">Miguel · Informática UNAM FES C4</span>
+    </div>
+    <div class="streak">
+      <span>🔥</span>
+      <span class="streak-num" id="streak-num">0</span>
+      <span>días</span>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="sidebar">
+      <div class="nav-section">Vistas</div>
+      <div class="nav-item active" onclick="showView('today',this)">
+        <span>◈</span> Hoy
+        <span class="nav-badge" id="badge-today">0</span>
+      </div>
+      <div class="nav-item" onclick="showView('phases',this)">
+        <span>◎</span> Fases
+      </div>
+      <div class="nav-item" onclick="showView('log',this)">
+        <span>◇</span> Bitácora
+      </div>
+      <div class="nav-item" onclick="showView('logros',this)">
+        <span>◆</span> Logros
+      </div>
+      <div class="nav-section" style="margin-top:12px">Fases</div>
+      <div class="nav-item" onclick="showView('phases',this);setTimeout(()=>scrollToPhase(0),100)">
+        <div class="phase-dot" style="background:#60a5fa"></div>
+        <span style="flex:1">F1 · Fundamentos</span>
+        <span class="nav-badge" id="pct-0">0%</span>
+      </div>
+      <div class="nav-item" onclick="showView('phases',this);setTimeout(()=>scrollToPhase(1),100)">
+        <div class="phase-dot" style="background:#4ade80"></div>
+        <span style="flex:1">F2 · Especialización</span>
+        <span class="nav-badge" id="pct-1">0%</span>
+      </div>
+      <div class="nav-item" onclick="showView('phases',this);setTimeout(()=>scrollToPhase(2),100)">
+        <div class="phase-dot" style="background:#fbbf24"></div>
+        <span style="flex:1">F3 · Certificación</span>
+        <span class="nav-badge" id="pct-2">0%</span>
+      </div>
+      <div class="nav-item" onclick="showView('phases',this);setTimeout(()=>scrollToPhase(3),100)">
+        <div class="phase-dot" style="background:#a78bfa"></div>
+        <span style="flex:1">F4 · Junior</span>
+        <span class="nav-badge" id="pct-3">0%</span>
+      </div>
+      <div class="nav-item" onclick="showView('phases',this);setTimeout(()=>scrollToPhase(4),100)">
+        <div class="phase-dot" style="background:#f87171"></div>
+        <span style="flex:1">F5 · Internacional</span>
+        <span class="nav-badge" id="pct-4">0%</span>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- TODAY -->
+      <div class="view active" id="view-today">
+        <div class="today-header">
+          <div class="today-date" id="today-date"></div>
+          <div class="today-title">Buen día, Miguel 👋</div>
+          <div class="today-sub" id="today-sub">Cargando estado...</div>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-label">Completadas hoy</div>
+            <div class="stat-val" id="stat-done">0</div>
+            <div class="stat-sub">tareas</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Hábitos activos</div>
+            <div class="stat-val" id="stat-habits">0</div>
+            <div class="stat-sub" id="stat-habits-sub">de 5 hoy</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Progreso global</div>
+            <div class="stat-val" id="stat-global">0%</div>
+            <div class="stat-sub">de la ruta</div>
+          </div>
+        </div>
+
+        <div class="section-title">Hábitos diarios</div>
+        <div class="habits-grid" id="habits-grid"></div>
+
+        <div class="section-title">Tareas pendientes</div>
+        <div id="tasks-list"></div>
+        <div class="add-task-row">
+          <input type="text" id="new-task-input" placeholder="Agregar tarea..." onkeydown="if(event.key==='Enter')addTask()">
+          <select id="new-task-phase">
+            <option value="0">F1</option>
+            <option value="1">F2</option>
+            <option value="2">F3</option>
+            <option value="3">F4</option>
+            <option value="4">F5</option>
+          </select>
+          <button class="btn sm" onclick="addTask()">+ Agregar</button>
+        </div>
+      </div>
+
+      <!-- PHASES -->
+      <div class="view" id="view-phases">
+        <div class="today-header">
+          <div class="today-title">Fases de la ruta</div>
+          <div class="today-sub">Marca objetivos completados en cada fase</div>
+        </div>
+        <div id="phases-list"></div>
+      </div>
+
+      <!-- LOG -->
+      <div class="view" id="view-log">
+        <div class="today-header">
+          <div class="today-title">Bitácora</div>
+          <div class="today-sub">Registra lo que aprendiste, lograste o reflexionaste</div>
+        </div>
+        <div class="log-input-row">
+          <input type="text" id="log-input" placeholder="¿Qué hiciste hoy?..." onkeydown="if(event.key==='Enter')addLog()">
+          <button class="btn sm" onclick="addLog()">Registrar</button>
+        </div>
+        <div id="log-list"></div>
+      </div>
+
+      <!-- LOGROS -->
+      <div class="view" id="view-logros">
+        <div class="today-header">
+          <div class="today-title">Logros</div>
+          <div class="today-sub">Se desbloquean automáticamente según tu progreso</div>
+        </div>
+        <div class="logro-grid" id="logros-grid"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// Simple storage polyfill using localStorage for environments without window.storage
+if(!window.storage){
+  window.storage = {
+    async get(key){
+      try{ const v = window.localStorage.getItem(key); return { value: v }; }catch(e){ return null; }
+    },
+    async set(key, value){
+      try{ window.localStorage.setItem(key, value); return true; }catch(e){ return false; }
+    }
+  };
+}
+
+const PHASES = [
+  {name:'F1 · Fundamentos + exploración', color:'#60a5fa', sem:'Sem 2–3 · ~6 meses',
+   milestone:'Repositorio GitHub con 3+ proyectos, área elegida',
+   objectives:[
+     'Completar CS50P de Harvard (Python)',
+     'Resolver 30 ejercicios en LeetCode nivel Easy',
+     'Crear cuenta y subir primer proyecto a GitHub',
+     'Construir script de automatización personal',
+     'Ver 2 horas/semana de YouTube tech en inglés',
+     'Probar web (HTML/CSS/JS básico)',
+     'Probar datos (tutorial Kaggle Intro to ML)',
+     'Probar seguridad (TryHackMe Pre-Security)',
+     'Elegir área de especialización'
+   ]},
+  {name:'F2 · Especialización inicial', color:'#4ade80', sem:'Sem 3–4 · ~6 meses',
+   milestone:'Primer proyecto serio publicado, inglés fluido para leer/escribir',
+   objectives:[
+     'Completar curso React (Scrimba o freeCodeCamp)',
+     'Aprender Node.js + Express básico',
+     'Completar NumPy y Pandas fundamentals',
+     'Completar curso ML Andrew Ng (Coursera)',
+     'Terminar TryHackMe SOC Level 1',
+     'Publicar proyecto con base de datos en línea',
+     'Subir primer proyecto serio a GitHub',
+     'Primer competencia Kaggle completada',
+     'Leer documentación técnica solo en inglés'
+   ]},
+  {name:'F3 · Certificación + primer dinero', color:'#fbbf24', sem:'Sem 4–5 · ~6 meses',
+   milestone:'1 certificación cloud, ingreso freelance, práctica profesional',
+   objectives:[
+     'Obtener AWS Cloud Practitioner',
+     'Completar Google Cloud Skills Boost (5 insignias)',
+     'Primer proyecto freelance pagado',
+     'Aplicar a prácticas profesionales',
+     'Contribuir a proyecto open source en GitHub',
+     'Iniciar clases de inglés conversacional (Italki/Cambly)',
+     'LinkedIn con perfil técnico completo'
+   ]},
+  {name:'F4 · Nivel profesional junior', color:'#a78bfa', sem:'Sem 5–7 · ~1 año',
+   milestone:'Primer trabajo formal, 2+ certs, portafolio sólido',
+   objectives:[
+     'Dominar TypeScript (o stack de tu área)',
+     'Docker y despliegue en producción',
+     'Segunda certificación cloud (Associate level)',
+     'Escribir 5 artículos técnicos publicados',
+     'GitHub con commits diarios por 3+ meses',
+     'Primer trabajo de tiempo parcial en tech',
+     'Inglés conversacional en entrevistas técnicas'
+   ]},
+  {name:'F5 · Proyección internacional', color:'#f87171', sem:'Sem 8–9 · último año',
+   milestone:'Posición junior–mid con sueldo competitivo, opción internacional',
+   objectives:[
+     'Aplicar a plataformas nearshore (Toptal, Turing)',
+     'AWS Solutions Architect Associate o equivalente',
+     'Inglés fluido en reuniones técnicas',
+     'Portafolio con 8+ proyectos documentados',
+     'Investigar opciones de posgrado/intercambio UNAM',
+     'Primera entrevista técnica en inglés completada'
+   ]}
+];
+
+const HABITS = [
+  {id:'python', name:'Código Python', icon:'🐍'},
+  {id:'leetcode', name:'LeetCode', icon:'⚡'},
+  {id:'ingles', name:'Inglés 30 min', icon:'🌐'},
+  {id:'github', name:'Commit a GitHub', icon:'💾'},
+  {id:'lectura', name:'Leer docs/artículo', icon:'📖'},
+];
+
+const LOGROS_DEF = [
+  {id:'first_task', icon:'✅', name:'Primera tarea', desc:'Completa tu primera tarea'},
+  {id:'week_streak', icon:'🔥', name:'Racha semanal', desc:'7 días de hábitos consecutivos'},
+  {id:'github_up', icon:'🐙', name:'GitHub vivo', desc:'Commit marcado 10 veces'},
+  {id:'phase1_done', icon:'🎯', name:'Fase 1 completa', desc:'100% de F1 terminada'},
+  {id:'first_log', icon:'📝', name:'Bitácora abierta', desc:'Escribe tu primer registro'},
+  {id:'certif', icon:'🏅', name:'Certificado', desc:'Marca el objetivo AWS o Google Cloud'},
+  {id:'freelance', icon:'💰', name:'Primer dinero', desc:'Marca "Primer proyecto freelance"'},
+  {id:'halfway', icon:'🌗', name:'Mitad del camino', desc:'50% de progreso global'},
+];
+
+let state = {
+  tasks: [],
+  habitLog: {},
+  objectives: {},
+  logs: [],
+  logros: [],
+  lastDay: null,
+  streak: 0,
+  githubCount: 0
+};
+
+async function load() {
+  try {
+    const r = await window.storage.get('ruta-miguel-v2');
+    if (r && r.value) state = JSON.parse(r.value);
+  } catch(e) {}
+  render();
+}
+
+async function save() {
+  try {
+    await window.storage.set('ruta-miguel-v2', JSON.stringify(state));
+  } catch(e) {}
+}
+
+function todayKey() {
+  return new Date().toISOString().slice(0,10);
+}
+
+function render() {
+  renderHabits();
+  renderTasks();
+  renderPhases();
+  renderLog();
+  renderLogros();
+  renderStats();
+  updateStreak();
+  checkLogros();
+}
+
+function renderStats() {
+  const today = todayKey();
+  const doneTasks = state.tasks.filter(t=>t.done).length;
+  const habitsToday = HABITS.filter(h=>(state.habitLog[today]||{})[h.id]).length;
+  document.getElementById('stat-done').textContent = doneTasks;
+  document.getElementById('stat-habits').textContent = habitsToday;
+  document.getElementById('stat-habits-sub').textContent = `de ${HABITS.length} hoy`;
+  const totalObj = PHASES.reduce((a,p)=>a+p.objectives.length,0);
+  const doneObj = Object.values(state.objectives).filter(Boolean).length;
+  const pct = totalObj ? Math.round(doneObj/totalObj*100) : 0;
+  document.getElementById('stat-global').textContent = pct+'%';
+  document.getElementById('today-sub').textContent =
+    habitsToday === HABITS.length ? '¡Todos los hábitos del día completados! 🔥' :
+    habitsToday > 0 ? `${habitsToday} de ${HABITS.length} hábitos completados hoy` :
+    'Aún no marcas hábitos hoy. ¡Empieza ahora!';
+  document.getElementById('badge-today').textContent =
+    state.tasks.filter(t=>!t.done).length;
+}
+
+function renderHabits() {
+  const today = todayKey();
+  const todayLog = state.habitLog[today] || {};
+  const el = document.getElementById('habits-grid');
+  el.innerHTML = HABITS.map(h=>`
+    <div class="habit-btn${todayLog[h.id]?' done':''}" onclick="toggleHabit('${h.id}')">
+      <div class="habit-name">${h.icon} ${h.name}</div>
+      <div class="habit-streak">${getHabitStreak(h.id)}d streak</div>
+      <div class="habit-check">${todayLog[h.id]?'✓':''}</div>
+    </div>`).join('');
+}
+
+function getHabitStreak(hid) {
+  let s=0, d=new Date();
+  while(true){
+    const k=d.toISOString().slice(0,10);
+    if((state.habitLog[k]||{})[hid]){s++;d.setDate(d.getDate()-1);} 
+    else break;
+    if(s>365)break;
+  }
+  return s;
+}
+
+function toggleHabit(hid) {
+  const today = todayKey();
+  if(!state.habitLog[today]) state.habitLog[today]={};
+  state.habitLog[today][hid] = !state.habitLog[today][hid];
+  if(hid==='github' && state.habitLog[today][hid]) state.githubCount=(state.githubCount||0)+1;
+  save(); render();
+}
+
+function renderTasks() {
+  const el = document.getElementById('tasks-list');
+  const pending = state.tasks.filter(t=>!t.done);
+  const done = state.tasks.filter(t=>t.done).slice(-3);
+  const all = [...pending, ...done];
+  if(!all.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon">○</div>Sin tareas — agrega una abajo</div>';
+    return;
+  }
+  const phColors = ['#60a5fa','#4ade80','#fbbf24','#a78bfa','#f87171'];
+  el.innerHTML = all.map((t,i)=>`
+    <div class="task-item${t.done?' done':''}" onclick="toggleTask(${state.tasks.indexOf(t)})">
+      <div class="task-cb">${t.done?'✓':''}</div>
+      <div class="task-body">
+        <div class="task-name">${t.name}</div>
+        <div class="task-meta">
+          <span class="task-phase" style="background:${phColors[t.phase]}22;color:${phColors[t.phase]}">F${t.phase+1}</span>
+          ${t.date||''}
+        </div>
+      </div>
+      <button class="btn ghost sm" style="flex-shrink:0;padding:4px 8px;font-size:11px" onclick="event.stopPropagation();deleteTask(${state.tasks.indexOf(t)})">✕</button>
+    </div>`).join('');
+}
+
+function addTask() {
+  const inp = document.getElementById('new-task-input');
+  const ph = parseInt(document.getElementById('new-task-phase').value);
+  const name = inp.value.trim();
+  if(!name) return;
+  state.tasks.unshift({name, phase:ph, done:false, date:todayKey()});
+  inp.value='';
+  save(); render();
+}
+
+function toggleTask(i) {
+  state.tasks[i].done = !state.tasks[i].done;
+  save(); render();
+}
+
+function deleteTask(i) {
+  state.tasks.splice(i,1);
+  save(); render();
+}
+
+function renderPhases() {
+  const el = document.getElementById('phases-list');
+  el.innerHTML = PHASES.map((p,pi)=>{
+    const total = p.objectives.length;
+    const done = p.objectives.filter((_,oi)=>state.objectives[`${pi}-${oi}`]).length;
+    const pct = Math.round(done/total*100);
+    document.getElementById(`pct-${pi}`).textContent = pct+'%';
+    return `
+    <div class="phase-card" id="phase-card-${pi}">
+      <div class="phase-card-header">
+        <div class="phase-dot" style="background:${p.color}"></div>
+        <div class="phase-card-title">${p.name}</div>
+        <div class="phase-pct">${pct}%</div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${p.color}"></div></div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+        ${p.objectives.map((obj,oi)=>`
+          <div style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 8px;border-radius:6px;transition:background 0.15s"
+               onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''"
+               onclick="toggleObj(${pi},${oi})">
+            <div style="width:16px;height:16px;border-radius:4px;border:1.5px solid ${state.objectives[pi+'-'+oi]?p.color:'var(--border)'};
+                        background:${state.objectives[pi+'-'+oi]?p.color+'22':'transparent'};
+                        display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;color:${p.color}">
+              ${state.objectives[pi+'-'+oi]?'✓':''}
+            </div>
+            <span style="font-size:13px;color:${state.objectives[pi+'-'+oi]?'var(--muted)':'var(--text)'};
+                         text-decoration:${state.objectives[pi+'-'+oi]?'line-through':'none'}">
+              ${obj}
+            </span>
+          </div>`).join('')}
+      </div>
+      <div class="milestone-text">🎯 ${p.milestone}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleObj(pi, oi) {
+  const key = `${pi}-${oi}`;
+  state.objectives[key] = !state.objectives[key];
+  save(); render();
+}
+
+function scrollToPhase(pi) {
+  const el = document.getElementById(`phase-card-${pi}`);
+  if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function renderLog() {
+  const el = document.getElementById('log-list');
+  if(!state.logs.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon">◇</div>Sin registros aún</div>';
+    return;
+  }
+  el.innerHTML = [...state.logs].reverse().map(l=>`
+    <div class="log-item">
+      <div class="log-date">${l.date}</div>
+      <div class="log-text">${l.text}<span class="log-tag">${PHASES[l.phase]?.name.split('·')[0].trim()||'General'}</span></div>
+    </div>`).join('');
+}
+
+function addLog() {
+  const inp = document.getElementById('log-input');
+  const text = inp.value.trim();
+  if(!text) return;
+  const totalObj = PHASES.reduce((a,p)=>a+p.objectives.length,0);
+  const doneObj = Object.values(state.objectives).filter(Boolean).length;
+  const curPhase = Math.min(Math.floor(doneObj/totalObj*5), 4);
+  state.logs.push({text, date:todayKey(), phase:curPhase});
+  inp.value='';
+  save(); render();
+}
+
+function renderLogros() {
+  const earned = new Set(state.logros);
+  const el = document.getElementById('logros-grid');
+  el.innerHTML = LOGROS_DEF.map(l=>`
+    <div class="logro-card${earned.has(l.id)?' earned':' locked'}">
+      <div class="logro-icon">${l.icon}</div>
+      <div class="logro-name">${l.name}</div>
+      <div class="logro-desc">${l.desc}</div>
+      ${earned.has(l.id)?'<div style="font-size:11px;color:var(--amber);margin-top:6px">Desbloqueado ✓</div>':''}
+    </div>`).join('');
+}
+
+function checkLogros() {
+  const earned = new Set(state.logros);
+  const checks = [
+    ['first_task', state.tasks.some(t=>t.done)],
+    ['first_log', state.logs.length>0],
+    ['github_up', (state.githubCount||0)>=10],
+    ['phase1_done', PHASES[0].objectives.every((_,i)=>state.objectives[`0-${i}`])],
+    ['certif', state.objectives['2-0']||state.objectives['2-1']],
+    ['freelance', state.objectives['2-2']],
+    ['halfway', parseInt(document.getElementById('stat-global').textContent)>=50],
+  ];
+  let changed=false;
+  checks.forEach(([id,cond])=>{if(cond&&!earned.has(id)){state.logros.push(id);changed=true;}});
+  if(changed){save();renderLogros();}
+}
+
+function updateStreak() {
+  const today = todayKey();
+  const anyHabitToday = HABITS.some(h=>(state.habitLog[today]||{})[h.id]);
+  if(anyHabitToday && state.lastDay !== today) {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate()-1);
+    const yKey = yesterday.toISOString().slice(0,10);
+    if(state.lastDay===yKey) state.streak=(state.streak||0)+1;
+    else if(state.lastDay!==today) state.streak=1;
+    state.lastDay=today;
+    save();
+  }
+  if(state.streak>=7 && !state.logros.includes('week_streak')){
+    state.logros.push('week_streak');save();
+  }
+  document.getElementById('streak-num').textContent=state.streak||0;
+}
+
+function showView(name, el) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  if(el) el.classList.add('active');
+  if(name==='phases') renderPhases();
+}
+
+// Date display
+const now = new Date();
+document.getElementById('today-date').textContent =
+  now.toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+load();
+</script>
+</body>
+</html>
