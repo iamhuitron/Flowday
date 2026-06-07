@@ -1,6 +1,6 @@
 import "./global.css"; // <--- Asegúrate de que apunte al nombre real de tu archivo CSS
 import { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'rewwact-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
