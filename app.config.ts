@@ -26,6 +26,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   web: {
     bundler: 'metro',
     output: 'static',
+    baseUrl: '/flowday', 
     favicon: './src/assets/icons/favicon.png',
   },
   plugins: [
