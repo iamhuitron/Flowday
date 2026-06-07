@@ -1,3 +1,4 @@
+import "./global.css"; // <--- Asegúrate de que apunte al nombre real de tu archivo CSS
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
