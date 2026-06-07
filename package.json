@@ -15,7 +15,7 @@ Package · JSON
   },
   "dependencies": {
     "expo": "~52.0.0",
-    "expo-router": "~4.0.0",
+    "expo-router": "~1.0.0",
     "expo-status-bar": "~2.0.0",
     "expo-splash-screen": "~0.29.0",
     "expo-font": "~13.0.0",
