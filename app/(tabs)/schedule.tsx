@@ -10,7 +10,7 @@ import { useRouter } from 'expo-router';
 import { useStore } from '../../src/store/index';
 import { CATEGORY_COLORS, CATEGORY_ICONS } from '../../src/constants/index';
 import { Activity } from '../../src/types/index';
-import { timeToMinutes, formatDuration, minutesToTime } from '../../src/utils/utils_index';
+import { timeToMinutes, formatDuration, minutesToTime } from '../../src/utils/index';
 
 const MONO      = Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' });
 const PX_PER_MIN = 1.05;
