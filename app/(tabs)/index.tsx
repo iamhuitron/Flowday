@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Platform, Animated,
@@ -178,8 +178,8 @@ export default function TodayScreen() {
   const nowMins  = getNowMins();
 
   const current = template?.activities.find((a) => {
-    const s = timeToMins(a.startTime);
-    return nowMins >= s && nowMins < s + a.duration;
+    const startMins = timeToMins(a.startTime);
+    return nowMins >= startMins && nowMins < startMins + a.duration;
   });
   const next = template?.activities.find((a) => timeToMins(a.startTime) > nowMins);
 
