@@ -10,6 +10,12 @@
     ],
     "ios": {
       "supportsTablet": true
+    },
+    "android": {
+      "package": "com.iamhuitron.flowday"
+    },
+    "web": {
+      "favicon": "./src/assets/icons/favicon.png"
     }
   }
 }
