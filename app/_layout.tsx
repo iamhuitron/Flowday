@@ -1,6 +1,6 @@
-import "../global.css"; // 1. Cambiado a "../" para buscar en la raíz
+import "../global.css"; 
 import { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native'; // 2. Corregido 'rewwact-native'
+import { View, StyleSheet } from 'react-native'; 
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
