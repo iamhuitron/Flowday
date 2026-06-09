@@ -31,14 +31,14 @@ jobs:
       - name: 🤖 Generar carpetas nativas (Prebuild)
         run: npx expo prebuild --platform android --clean
 
-      - name: 🔧 FORZAR versión de Kotlin (Paso crítico)
+      - name: 🔧 Inyectar configuraciones críticas de Gradle
         run: |
-          # Sobreescribimos cualquier propiedad de Kotlin en el archivo de Gradle
-          echo "org.gradle.jvmargs=-Xmx2048m -Dkotlin.daemon.jvm.options='-Xmx2048m'" > android/gradle.properties
+          # Asegurar que hermes y otras propiedades existan
+          echo "hermesEnabled=true" >> android/gradle.properties
+          echo "newArchEnabled=false" >> android/gradle.properties
           echo "kotlinVersion=1.9.24" >> android/gradle.properties
           
-          # Aplicamos la supresión de error solo si es estrictamente necesario, 
-          # pero forzando que Gradle use la versión que configuramos arriba
+          # Parche para compatibilidad y splashscreen
           cat << 'EOF' >> android/build.gradle
           subprojects {
               tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
