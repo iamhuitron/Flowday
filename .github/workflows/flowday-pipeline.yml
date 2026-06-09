@@ -35,6 +35,12 @@ jobs:
       - name: 🤖 Generar carpetas nativas (Prebuild)
         run: npx expo prebuild --platform android --clean
 
+      - name: ⚙️ Forzar bundle en gradle.properties
+        run: |
+          echo "" >> android/gradle.properties
+          echo "reactNativeBundleInDebug=true" >> android/gradle.properties
+          echo "hermesEnabled=true" >> android/gradle.properties
+
       - name: 🏗️ Compilar APK
         env:
           NODE_ENV: production
@@ -44,8 +50,7 @@ jobs:
           ./gradlew assembleDebug \
             --no-daemon \
             -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m" \
-            -Dorg.gradle.parallel=true \
-            -PreactNativeBundleInDebug=true
+            -Dorg.gradle.parallel=true
 
       - name: 📤 Guardar APK como Artefacto
         uses: actions/upload-artifact@v4
