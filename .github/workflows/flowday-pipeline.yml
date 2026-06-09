@@ -31,20 +31,6 @@ jobs:
       - name: 🤖 Generar carpetas nativas (Prebuild)
         run: npx expo prebuild --platform android --clean
 
-      - name: 🛠️ Aplicar supresión global de Kotlin (Init Script)
-        run: |
-          # Creamos un script de inicialización para Gradle que fuerza la supresión
-          mkdir -p android/gradle
-          cat << 'EOF' > android/gradle/init.gradle
-          allprojects {
-              tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-                  kotlinOptions {
-                      freeCompilerArgs += ["-P", "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=1.9.25"]
-                  }
-              }
-          }
-          EOF
-
       - name: ☕ Configurar Java JDK 17
         uses: actions/setup-java@v4
         with:
@@ -54,8 +40,7 @@ jobs:
       - name: 🏗️ Compilar APK
         run: |
           cd android
-          # Ejecutamos usando el script de inicialización
-          ./gradlew assembleDebug --init-script gradle/init.gradle
+          ./gradlew assembleDebug
 
       - name: 📤 Guardar APK como Artefacto
         uses: actions/upload-artifact@v4
