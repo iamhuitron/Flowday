@@ -29,13 +29,20 @@ jobs:
         run: rm -rf android ios
 
       - name: 🤖 Generar carpetas nativas (Prebuild)
-        # Aquí el plugin de expo-build-properties en tu app.json hará el trabajo
         run: npx expo prebuild --platform android --clean
 
-      - name: 🔧 Parche de seguridad para Splashscreen
+      - name: 🛡️ Inyectar configuración estricta de Kotlin
         run: |
+          # Esto sobreescribe cualquier intento de usar otra versión
+          echo "kotlinVersion=1.9.24" >> android/gradle.properties
+          # Parche para splashscreen y supresión de error de compatibilidad global
           cat << 'EOF' >> android/build.gradle
           subprojects {
+              tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+                  kotlinOptions {
+                      freeCompilerArgs += ["-P", "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=1.9.24"]
+                  }
+              }
               configurations.all {
                   resolutionStrategy {
                       force 'androidx.core:core-splashscreen:1.0.1'
