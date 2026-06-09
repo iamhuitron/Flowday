@@ -40,8 +40,7 @@ jobs:
       - name: 🏗️ Compilar APK
         run: |
           cd android
-          # Usamos las propiedades necesarias directamente aquí para evitar tocar build.gradle
-          ./gradlew assembleDebug -PkotlinVersion=1.9.24
+          ./gradlew assembleDebug
 
       - name: 📤 Guardar APK como Artefacto
         uses: actions/upload-artifact@v4
