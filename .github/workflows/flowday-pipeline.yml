@@ -20,10 +20,10 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: 📦 Instalar dependencias y alinear versiones de Expo
+      - name: 📦 Instalar dependencias y forzar MMKV moderno
         run: |
           npm install --legacy-peer-deps
-          npx expo install react-native-mmkv
+          npm install react-native-mmkv@latest --legacy-peer-deps
 
       - name: 🧹 Limpiar residuos nativos previos
         run: rm -rf android ios
