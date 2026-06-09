@@ -15,40 +15,21 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 🟢 Configurar Node.js
-        uses: actions/setup-node@v4
+        uses: setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
 
       - name: 📦 Instalar dependencias
-        run: |
-          npm install --legacy-peer-deps
-          npm install react-native-mmkv@latest react-native-nitro-modules --legacy-peer-deps
+        run: npm install --legacy-peer-deps
 
-      - name: 🧹 Limpiar entornos previos
+      - name: 🧹 Limpiar entornos
         run: rm -rf android ios
 
-      - name: 🤖 Generar carpetas nativas (Prebuild)
+      - name: 🤖 Generar carpetas nativas
         run: npx expo prebuild --platform android --clean
 
-      - name: 🛡️ Inyectar Forzador de Versión de Kotlin
-        run: |
-          cat << 'EOF' >> android/build.gradle
-          subprojects {
-              configurations.all {
-                  resolutionStrategy {
-                      // Forzamos que cualquier librería que pida Kotlin 1.9.25 use la 1.9.24
-                      eachDependency { details ->
-                          if (details.requested.group == 'org.jetbrains.kotlin' && details.requested.name.contains('kotlin')) {
-                              details.useVersion '1.9.24'
-                          }
-                      }
-                  }
-              }
-          }
-          EOF
-
-      - name: ☕ Configurar Java JDK 17
+      - name: ☕ Configurar Java
         uses: actions/setup-java@v4
         with:
           java-version: '17'
@@ -58,9 +39,3 @@ jobs:
         run: |
           cd android
           ./gradlew assembleDebug
-
-      - name: 📤 Guardar APK como Artefacto
-        uses: actions/upload-artifact@v4
-        with:
-          name: flowday-app-debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
