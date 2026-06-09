@@ -31,15 +31,10 @@ jobs:
       - name: 🤖 Generar carpetas nativas de Android (Prebuild)
         run: npx expo prebuild --platform android
 
-      - name: 🔧 Parches de compatibilidad Gradle
+      - name: 🔧 Parche de compatibilidad para Splashscreen
         run: |
           cat << 'EOF' >> android/build.gradle
           subprojects {
-              tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-                  kotlinOptions {
-                      freeCompilerArgs += ["-P", "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=1.9.25"]
-                  }
-              }
               configurations.all {
                   resolutionStrategy {
                       force 'androidx.core:core-splashscreen:1.0.1'
