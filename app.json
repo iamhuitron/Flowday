@@ -1,69 +1,68 @@
-name: Flowday CI (Only Android APK)
-
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
-
-jobs:
-  build-android:
-    name: 🤖 Build Android APK
-    runs-on: ubuntu-latest
-    steps:
-      - name: 📥 Clonar repositorio
-        uses: actions/checkout@v4
-
-      - name: 🟢 Configurar Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: 📦 Instalar dependencias de Node
-        run: npm install --legacy-peer-deps
-
-      - name: 🧹 Limpiar residuos nativos previos
-        run: rm -rf android ios
-
-      - name: 🤖 Generar carpetas nativas de Android (Prebuild)
-        run: npx expo prebuild --platform android
-
-      - name: 🔧 Desactivar bloqueo de compatibilidad de Kotlin (Compose)
-        run: |
-          cat << 'EOF' >> android/build.gradle
-          subprojects {
-              tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-                  kotlinOptions {
-                      freeCompilerArgs += ["-P", "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true"]
-                  }
-              }
+{
+  "expo": {
+    "name": "FlowDay",
+    "slug": "flowday",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./src/assets/icons/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./src/assets/icons/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0f0f11"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.iamhuitron.flowday"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/icons/icon.png",
+        "backgroundColor": "#0f0f11"
+      },
+      "package": "com.iamhuitron.flowday"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "baseUrl": "/flowday",
+      "favicon": "./src/assets/icons/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./src/assets/icons/notification-icon.png",
+          "color": "#7c6aff"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "buildToolsVersion": "35.0.0",
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "kotlinVersion": "1.9.24",
+            "newArchEnabled": false
           }
-          EOF
-
-      - name: ☕ Configurar Java JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'zulu'
-
-      - name: 🗄️ Configurar Caché de Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      - name: 🏗️ Compilar APK (Versión Debug)
-        run: |
-          cd android
-          ./gradlew assembleDebug
-
-      - name: 📤 Guardar APK como Artefacto
-        uses: actions/upload-artifact@v4
-        with:
-          name: flowday-app-debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "scheme": "flowday",
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "b2ad3083-2c4e-4dac-b853-c2e553f45ed3"
+      }
+    }
+  }
+}
