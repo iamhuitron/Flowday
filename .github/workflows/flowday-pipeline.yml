@@ -36,6 +36,9 @@ jobs:
         run: npx expo prebuild --platform android --clean
 
       - name: 🏗️ Compilar APK
+        env:
+          NODE_ENV: production
+          BUNDLE_JS: true
         run: |
           cd android
           ./gradlew assembleDebug \
