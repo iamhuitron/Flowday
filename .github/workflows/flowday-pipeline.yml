@@ -29,34 +29,23 @@ jobs:
       - name: 📦 Instalar dependencias
         run: npm install --legacy-peer-deps
 
-      - name: 📦 Instalar React Native CLI
-        run: npm install --save-dev @react-native-community/cli --legacy-peer-deps
-
       - name: 🧹 Limpiar entornos previos
         run: rm -rf android ios
 
       - name: 🤖 Generar carpetas nativas (Prebuild)
         run: npx expo prebuild --platform android --clean
 
-      - name: 📦 Generar JS Bundle
-        run: |
-          mkdir -p android/app/src/main/assets
-          npx react-native bundle \
-            --platform android \
-            --dev false \
-            --entry-file node_modules/expo-router/entry.js \
-            --bundle-output android/app/src/main/assets/index.android.bundle \
-            --assets-dest android/app/src/main/res
-
       - name: 🏗️ Compilar APK
         env:
           NODE_ENV: production
+          EXPO_NO_DOTENV: 1
         run: |
           cd android
           ./gradlew assembleDebug \
             --no-daemon \
             -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m" \
-            -Dorg.gradle.parallel=true
+            -Dorg.gradle.parallel=true \
+            -PreactNativeBundleInDebug=true
 
       - name: 📤 Guardar APK como Artefacto
         uses: actions/upload-artifact@v4
