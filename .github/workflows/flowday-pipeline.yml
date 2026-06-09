@@ -29,6 +29,9 @@ jobs:
       - name: 📦 Instalar dependencias
         run: npm install --legacy-peer-deps
 
+      - name: 📦 Instalar React Native CLI
+        run: npm install --save-dev @react-native-community/cli --legacy-peer-deps
+
       - name: 🧹 Limpiar entornos previos
         run: rm -rf android ios
 
@@ -59,4 +62,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: flowday-app-debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: android/app/src/main/outputs/apk/debug/app-debug.apk
