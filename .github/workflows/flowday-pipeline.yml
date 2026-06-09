@@ -29,22 +29,14 @@ jobs:
         run: rm -rf android ios
 
       - name: 🤖 Generar carpetas nativas (Prebuild)
+        # Expo leerá tu app.json y aplicará las propiedades correctamente
         run: npx expo prebuild --platform android --clean
 
-      - name: 🛡️ Parche inteligente de Kotlin
+      - name: 🛡️ Aplicar resolución de conflicto Splashscreen
         run: |
+          # Solo aplicamos el parche necesario que no toca el compilador de Kotlin
           cat << 'EOF' >> android/build.gradle
           subprojects {
-              // Aplicar el parche SOLO si el nombre del módulo contiene 'expo'
-              // Esto evita corromper 'react-native-nitro-modules'
-              if (project.name.contains('expo')) {
-                  tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-                      kotlinOptions {
-                          freeCompilerArgs += ["-P", "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=1.9.25"]
-                      }
-                  }
-              }
-              
               configurations.all {
                   resolutionStrategy {
                       force 'androidx.core:core-splashscreen:1.0.1'
@@ -59,7 +51,7 @@ jobs:
           java-version: '17'
           distribution: 'zulu'
 
-      - name: 🏗️ Compilar APK
+      - name: 🏗️ Compilar APK (Debug)
         run: |
           cd android
           ./gradlew assembleDebug
