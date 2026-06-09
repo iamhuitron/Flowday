@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch: # Te permite activar el build manualmente desde la web de GitHub
+  workflow_dispatch:
 
 jobs:
   build-android:
@@ -22,6 +22,15 @@ jobs:
 
       - name: 📦 Instalar dependencias de Node
         run: npm install --legacy-peer-deps
+
+      - name: 🔍 MODO DETECTIVE (Verificar archivos reales en el servidor)
+        run: |
+          echo "=== ¿Qué archivos de configuración existen? ==="
+          ls -la | grep app
+          echo "=== ¿Qué contiene el app.json actual? ==="
+          cat app.json || echo "No se encontró app.json"
+          echo "=== ¿Existen las imágenes del icono? ==="
+          ls -la src/assets/icons/ || echo "No se encontró la carpeta de iconos"
 
       - name: 🧹 Limpiar residuos nativos previos
         run: rm -rf android ios
