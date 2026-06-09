@@ -31,16 +31,20 @@ jobs:
       - name: 🤖 Generar carpetas nativas (Prebuild)
         run: npx expo prebuild --platform android --clean
 
-      - name: 🛡️ Parche de compatibilidad con Kotlin 1.9.25
+      - name: 🛡️ Parche inteligente de Kotlin
         run: |
           cat << 'EOF' >> android/build.gradle
           subprojects {
-              tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-                  kotlinOptions {
-                      // Ahora le decimos que ignore la discrepancia contra la 1.9.25 real
-                      freeCompilerArgs += ["-P", "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=1.9.25"]
+              // Aplicar el parche SOLO si el nombre del módulo contiene 'expo'
+              // Esto evita corromper 'react-native-nitro-modules'
+              if (project.name.contains('expo')) {
+                  tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+                      kotlinOptions {
+                          freeCompilerArgs += ["-P", "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=1.9.25"]
+                      }
                   }
               }
+              
               configurations.all {
                   resolutionStrategy {
                       force 'androidx.core:core-splashscreen:1.0.1'
