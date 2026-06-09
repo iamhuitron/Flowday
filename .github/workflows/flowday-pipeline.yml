@@ -35,11 +35,11 @@ jobs:
       - name: 🤖 Generar carpetas nativas (Prebuild)
         run: npx expo prebuild --platform android --clean
 
-      - name: ⚙️ Forzar bundle en gradle.properties
+      - name: ⚙️ Forzar JS bundle en debug build
         run: |
-          echo "" >> android/gradle.properties
-          echo "reactNativeBundleInDebug=true" >> android/gradle.properties
-          echo "hermesEnabled=true" >> android/gradle.properties
+          sed -i 's/debuggableVariants = \["debug"\]/debuggableVariants = []/' android/app/build.gradle
+          # Verificar que el cambio se aplicó
+          grep "debuggableVariants" android/app/build.gradle
 
       - name: 🏗️ Compilar APK
         env:
