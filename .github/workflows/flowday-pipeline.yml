@@ -29,14 +29,23 @@ jobs:
         run: rm -rf android ios
 
       - name: 🤖 Generar carpetas nativas (Prebuild)
-        # Expo leerá tu app.json y aplicará las propiedades correctamente
         run: npx expo prebuild --platform android --clean
 
-      - name: 🛡️ Aplicar resolución de conflicto Splashscreen
+      - name: 🔧 FORZAR versión de Kotlin (Paso crítico)
         run: |
-          # Solo aplicamos el parche necesario que no toca el compilador de Kotlin
+          # Sobreescribimos cualquier propiedad de Kotlin en el archivo de Gradle
+          echo "org.gradle.jvmargs=-Xmx2048m -Dkotlin.daemon.jvm.options='-Xmx2048m'" > android/gradle.properties
+          echo "kotlinVersion=1.9.24" >> android/gradle.properties
+          
+          # Aplicamos la supresión de error solo si es estrictamente necesario, 
+          # pero forzando que Gradle use la versión que configuramos arriba
           cat << 'EOF' >> android/build.gradle
           subprojects {
+              tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+                  kotlinOptions {
+                      freeCompilerArgs += ["-P", "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=1.9.25"]
+                  }
+              }
               configurations.all {
                   resolutionStrategy {
                       force 'androidx.core:core-splashscreen:1.0.1'
@@ -51,7 +60,7 @@ jobs:
           java-version: '17'
           distribution: 'zulu'
 
-      - name: 🏗️ Compilar APK (Debug)
+      - name: 🏗️ Compilar APK
         run: |
           cd android
           ./gradlew assembleDebug
