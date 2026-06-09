@@ -20,10 +20,10 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: 📦 Instalar dependencias y forzar MMKV moderno
+      - name: 📦 Instalar dependencias completas de MMKV v3
         run: |
           npm install --legacy-peer-deps
-          npm install react-native-mmkv@latest --legacy-peer-deps
+          npm install react-native-mmkv@latest react-native-nitro-modules --legacy-peer-deps
 
       - name: 🧹 Limpiar residuos nativos previos
         run: rm -rf android ios
@@ -31,7 +31,7 @@ jobs:
       - name: 🤖 Generar carpetas nativas de Android (Prebuild)
         run: npx expo prebuild --platform android
 
-      - name: 🔧 Parches de compatibilidad Gradle (Solución Definitiva)
+      - name: 🔧 Parches de compatibilidad Gradle
         run: |
           cat << 'EOF' >> android/build.gradle
           subprojects {
