@@ -35,10 +35,19 @@ jobs:
       - name: 🤖 Generar carpetas nativas (Prebuild)
         run: npx expo prebuild --platform android --clean
 
+      - name: 📦 Generar JS Bundle
+        run: |
+          mkdir -p android/app/src/main/assets
+          npx react-native bundle \
+            --platform android \
+            --dev false \
+            --entry-file node_modules/expo/AppEntry.js \
+            --bundle-output android/app/src/main/assets/index.android.bundle \
+            --assets-dest android/app/src/main/res
+
       - name: 🏗️ Compilar APK
         env:
           NODE_ENV: production
-          BUNDLE_JS: true
         run: |
           cd android
           ./gradlew assembleDebug \
