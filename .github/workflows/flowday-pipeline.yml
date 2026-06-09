@@ -31,16 +31,14 @@ jobs:
       - name: 🤖 Generar carpetas nativas (Prebuild)
         run: npx expo prebuild --platform android --clean
 
-      - name: 🛡️ Inyectar configuración estricta de Kotlin
+      - name: 🛡️ Parche de compatibilidad con Kotlin 1.9.25
         run: |
-          # Esto sobreescribe cualquier intento de usar otra versión
-          echo "kotlinVersion=1.9.24" >> android/gradle.properties
-          # Parche para splashscreen y supresión de error de compatibilidad global
           cat << 'EOF' >> android/build.gradle
           subprojects {
               tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
                   kotlinOptions {
-                      freeCompilerArgs += ["-P", "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=1.9.24"]
+                      // Ahora le decimos que ignore la discrepancia contra la 1.9.25 real
+                      freeCompilerArgs += ["-P", "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=1.9.25"]
                   }
               }
               configurations.all {
