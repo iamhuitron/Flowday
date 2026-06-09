@@ -20,32 +20,25 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: 📦 Instalar dependencias completas de MMKV v3
+      - name: 📦 Instalar dependencias
         run: |
           npm install --legacy-peer-deps
           npm install react-native-mmkv@latest react-native-nitro-modules --legacy-peer-deps
 
-      - name: 🧹 Limpiar residuos nativos previos
+      - name: 🧹 Limpiar entornos previos
         run: rm -rf android ios
 
-      - name: 🤖 Generar carpetas nativas de Android (Prebuild)
-        run: npx expo prebuild --platform android
+      - name: 🤖 Generar carpetas nativas (Prebuild)
+        # Aquí el plugin de expo-build-properties en tu app.json hará el trabajo
+        run: npx expo prebuild --platform android --clean
 
-      - name: 🔧 Parche quirúrgico de compatibilidad (Splashscreen y Kotlin)
+      - name: 🔧 Parche de seguridad para Splashscreen
         run: |
           cat << 'EOF' >> android/build.gradle
           subprojects {
               configurations.all {
                   resolutionStrategy {
                       force 'androidx.core:core-splashscreen:1.0.1'
-                  }
-              }
-              // Aplicar el bypass de versión de Kotlin SOLO a módulos de Expo para no romper Nitro
-              if (project.name.contains('expo')) {
-                  tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-                      kotlinOptions {
-                          freeCompilerArgs += ["-P", "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=1.9.25"]
-                      }
                   }
               }
           }
@@ -57,17 +50,7 @@ jobs:
           java-version: '17'
           distribution: 'zulu'
 
-      - name: 🗄️ Configurar Caché de Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      - name: 🏗️ Compilar APK (Versión Debug)
+      - name: 🏗️ Compilar APK
         run: |
           cd android
           ./gradlew assembleDebug
