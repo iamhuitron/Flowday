@@ -1,0 +1,57 @@
+name: Flowday CI (Only Android APK)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Te permite activar el build manualmente desde la web de GitHub
+
+jobs:
+  build-android:
+    name: 🤖 Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: 🟢 Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 📦 Instalar dependencias de Node
+        run: npm install --legacy-peer-deps
+
+      - name: 🧹 Limpiar residuos nativos previos
+        run: rm -rf android ios
+
+      - name: 🤖 Generar carpetas nativas de Android (Prebuild)
+        run: npx expo prebuild --platform android
+
+      - name: ☕ Configurar Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'zulu'
+
+      - name: 🗄️ Configurar Caché de Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: 🏗️ Compilar APK (Versión Debug)
+        run: |
+          cd android
+          ./gradlew assembleDebug
+
+      - name: 📤 Guardar APK como Artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: flowday-app-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
