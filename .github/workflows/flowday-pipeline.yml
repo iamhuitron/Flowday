@@ -48,9 +48,6 @@ jobs:
           cp dist-android/_expo/static/js/android/*.hbc \
              android/app/src/main/assets/index.android.bundle
 
-          # Copiar assets (fuentes, imágenes)
-          cp -r dist-android/assets/. android/app/src/main/res/ 2>/dev/null || true
-
       - name: 🏗️ Compilar APK
         env:
           NODE_ENV: production
