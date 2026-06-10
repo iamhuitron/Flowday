@@ -28,19 +28,19 @@ function TabIcon({
   const bgAnim    = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue: focused ? 1.05 : 1,
-        useNativeDriver: true,
-        tension: 150,
-        friction: 10,
-      }),
-      Animated.timing(bgAnim, {
-        toValue: focused ? 1 : 0,
-        duration: 200,
-        useNativeDriver: false,
-      }),
-    ]).start();
+    // FIX: llamadas separadas en vez de Animated.parallel con drivers distintos
+    Animated.spring(scaleAnim, {
+      toValue: focused ? 1.05 : 1,
+      useNativeDriver: true,   // solo transform → native driver OK
+      tension: 150,
+      friction: 10,
+    }).start();
+
+    Animated.timing(bgAnim, {
+      toValue: focused ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false,  // backgroundColor → JS driver OK
+    }).start();
   }, [focused]);
 
   const bgColor = bgAnim.interpolate({
@@ -49,17 +49,22 @@ function TabIcon({
   });
 
   return (
-    <Animated.View style={[s.iconWrap, { transform: [{ scale: scaleAnim }], backgroundColor: bgColor }]}>
-      <Icon
-        size={22}
-        strokeWidth={focused ? 2.2 : 1.8}
-        color={focused ? '#7c6aff' : '#55556a'}
-      />
-      {badge && badge > 0 ? (
-        <View style={s.badge}>
-          <Text style={s.badgeText}>{badge > 9 ? '9+' : badge}</Text>
-        </View>
-      ) : null}
+    // FIX: dos Animated.View anidados — cada uno con un solo driver
+    // Exterior: backgroundColor con JS driver
+    <Animated.View style={[s.iconWrap, { backgroundColor: bgColor }]}>
+      {/* Interior: transform con native driver */}
+      <Animated.View style={{ transform: [{ scale: scaleAnim }], alignItems: 'center', justifyContent: 'center' }}>
+        <Icon
+          size={22}
+          strokeWidth={focused ? 2.2 : 1.8}
+          color={focused ? '#7c6aff' : '#55556a'}
+        />
+        {badge && badge > 0 ? (
+          <View style={s.badge}>
+            <Text style={s.badgeText}>{badge > 9 ? '9+' : badge}</Text>
+          </View>
+        ) : null}
+      </Animated.View>
     </Animated.View>
   );
 }
@@ -77,8 +82,8 @@ function TabLabel({ label, focused }: { label: string; focused: boolean }) {
 export default function TabLayout() {
   const { tasks, habits, habitLogs } = useStore();
 
-  const today       = new Date().toISOString().slice(0, 10);
-  const pendingTasks = tasks.filter((t) => !t.done).length;
+  const today        = new Date().toISOString().slice(0, 10);
+  const pendingTasks  = tasks.filter((t) => !t.done).length;
   const pendingHabits = habits.filter(
     (h) => !habitLogs.find((l) => l.habitId === h.id && l.date === today)?.done,
   ).length;
@@ -91,7 +96,7 @@ export default function TabLayout() {
         tabBarShowLabel: false,
       }}
     >
-      {TABS.map(({ name, label, Icon }, i) => {
+      {TABS.map(({ name, label, Icon }) => {
         const badge = name === 'index'  ? pendingTasks
                     : name === 'habits' ? pendingHabits
                     : undefined;
