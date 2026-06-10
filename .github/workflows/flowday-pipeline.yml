@@ -35,30 +35,28 @@ jobs:
       - name: 🤖 Generar carpetas nativas (Prebuild)
         run: npx expo prebuild --platform android --clean
 
-      - name: 📦 Exportar JS Bundle con Expo
+      - name: 📦 Generar JS Bundle
         env:
           NODE_ENV: production
           EXPO_NO_DOTENV: 1
         run: |
-          npx expo export \
-            --platform android \
-            --output-dir dist-android
-
           mkdir -p android/app/src/main/assets
-          cp dist-android/_expo/static/js/android/*.hbc \
-             android/app/src/main/assets/index.android.bundle
+          npx expo export:embed \
+            --entry-file node_modules/expo-router/entry.js \
+            --platform android \
+            --dev false \
+            --bundle-output android/app/src/main/assets/index.android.bundle \
+            --assets-dest android/app/src/main/res
 
       - name: 🏗️ Compilar APK
         env:
           NODE_ENV: production
-          EXPO_NO_DOTENV: 1
         run: |
           cd android
           ./gradlew assembleDebug \
             --no-daemon \
             -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m" \
-            -Dorg.gradle.parallel=true \
-            -PbundleInDebug=false
+            -Dorg.gradle.parallel=true
 
       - name: 📤 Guardar APK como Artefacto
         uses: actions/upload-artifact@v4
