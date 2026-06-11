@@ -1,34 +1,25 @@
 // ─── Activity / Schedule ────────────────────────────────────────────────────
 
 export type ActivityCategory =
-  | 'sleep'
-  | 'wake'
-  | 'training'
-  | 'eating'
-  | 'hygiene'
-  | 'study'
-  | 'break'
-  | 'commute'
-  | 'work'
-  | 'write'
-  | 'custom';
+  | 'sleep' | 'wake' | 'training' | 'eating' | 'hygiene'
+  | 'study'  | 'break' | 'commute'  | 'work'  | 'write' | 'custom';
 
 export interface Activity {
   id: string;
   name: string;
   description?: string;
   category: ActivityCategory;
-  startTime: string;   // "HH:mm"
-  duration: number;    // minutes
-  color?: string;      // override category color
+  startTime: string;     // "HH:mm"
+  duration: number;      // minutes
+  color?: string;
   icon?: string;
   notifyBefore?: number; // minutes before, 0 = disabled
 }
 
 export interface DayTemplate {
   id: string;
-  name: string;            // e.g. "LMV", "MJ"
-  days: DayOfWeek[];       // which days of the week use this template
+  name: string;
+  days: DayOfWeek[];
   activities: Activity[];
   createdAt: string;
   updatedAt: string;
@@ -43,7 +34,7 @@ export interface Habit {
   name: string;
   icon: string;
   color?: string;
-  targetDays: DayOfWeek[];  // which days to track
+  targetDays: DayOfWeek[];
   createdAt: string;
 }
 
@@ -101,7 +92,9 @@ export interface AppSettings {
   theme: 'dark' | 'light' | 'system';
   accentColor: string;
   firstDayOfWeek: DayOfWeek;
-  notificationsEnabled: boolean;
+  notificationsEnabled: boolean;  // Recordatorios de hábitos (9:00 AM)
+  notifyActivities: boolean;      // Alertas de actividad (notifyBefore)
+  notifySummary: boolean;         // Resumen diario (10:00 PM)
   streakGoal: number;
 }
 
