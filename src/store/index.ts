@@ -9,39 +9,39 @@ import {
   DEFAULT_SETTINGS, DEFAULT_TEMPLATES, DEFAULT_HABITS,
 } from '@constants/index';
 
-// ─── MMKV storage adapter for Zustand ───────────────────────────────────────
+// ─── MMKV storage adapter ────────────────────────────────────────────────────
 const storage = new MMKV({ id: 'flowday-store' });
 
 const mmkvStorage = {
-  getItem: (key: string) => storage.getString(key) ?? null,
-  setItem: (key: string, value: string) => storage.set(key, value),
+  getItem:    (key: string) => storage.getString(key) ?? null,
+  setItem:    (key: string, value: string) => storage.set(key, value),
   removeItem: (key: string) => storage.delete(key),
 };
 
 // ─── Store actions ───────────────────────────────────────────────────────────
 interface StoreActions {
   // Templates
-  addTemplate: (t: DayTemplate) => void;
+  addTemplate:    (t: DayTemplate) => void;
   updateTemplate: (t: DayTemplate) => void;
-  deleteTemplate: (id: string) => void;
+  deleteTemplate: (id: string)     => void;
 
   // Habits
-  addHabit: (h: Habit) => void;
-  updateHabit: (h: Habit) => void;
-  deleteHabit: (id: string) => void;
+  addHabit:       (h: Habit)   => void;
+  updateHabit:    (h: Habit)   => void;
+  deleteHabit:    (id: string) => void;
   toggleHabitLog: (habitId: string, date: string) => void;
 
   // Tasks
-  addTask: (t: Task) => void;
+  addTask:    (t: Task)   => void;
   toggleTask: (id: string) => void;
   deleteTask: (id: string) => void;
 
-  // Roadmap objectives
+  // Objectives
   toggleObjective: (key: string) => void;
 
   // Journal
-  addJournalEntry: (e: JournalEntry) => void;
-  deleteJournalEntry: (id: string) => void;
+  addJournalEntry:    (e: JournalEntry) => void;
+  deleteJournalEntry: (id: string)      => void;
 
   // Settings
   updateSettings: (s: Partial<AppSettings>) => void;
@@ -49,11 +49,15 @@ interface StoreActions {
   // Streak
   recordActivity: () => void;
 
-  // Utils
-  getTodayTemplate: () => DayTemplate | undefined;
-  getHabitLogsForDate: (date: string) => HabitLog[];
-  getStreakForHabit: (habitId: string) => number;
-  getGlobalProgress: () => number;
+  // Backup / restore
+  importData:  (data: Partial<AppState>) => void;
+  resetStore:  () => void;
+
+  // Computed helpers
+  getTodayTemplate:     () => DayTemplate | undefined;
+  getHabitLogsForDate:  (date: string) => HabitLog[];
+  getStreakForHabit:    (habitId: string) => number;
+  getGlobalProgress:    () => number;
 }
 
 // ─── Initial state ───────────────────────────────────────────────────────────
@@ -75,8 +79,8 @@ export const useStore = create<AppState & StoreActions>()(
     (set, get) => ({
       ...INITIAL_STATE,
 
-      // ── Templates ──────────────────────────────────────────────────────────
-      addTemplate: (t) => set((s) => ({ templates: [...s.templates, t] })),
+      // ── Templates ────────────────────────────────────────────────────────
+      addTemplate:    (t) => set((s) => ({ templates: [...s.templates, t] })),
       updateTemplate: (t) => set((s) => ({
         templates: s.templates.map((x) => (x.id === t.id ? t : x)),
       })),
@@ -84,8 +88,8 @@ export const useStore = create<AppState & StoreActions>()(
         templates: s.templates.filter((x) => x.id !== id),
       })),
 
-      // ── Habits ─────────────────────────────────────────────────────────────
-      addHabit: (h) => set((s) => ({ habits: [...s.habits, h] })),
+      // ── Habits ───────────────────────────────────────────────────────────
+      addHabit:    (h) => set((s) => ({ habits: [...s.habits, h] })),
       updateHabit: (h) => set((s) => ({
         habits: s.habits.map((x) => (x.id === h.id ? h : x)),
       })),
@@ -110,32 +114,34 @@ export const useStore = create<AppState & StoreActions>()(
         get().recordActivity();
       },
 
-      // ── Tasks ──────────────────────────────────────────────────────────────
-      addTask: (t) => set((s) => ({ tasks: [t, ...s.tasks] })),
+      // ── Tasks ─────────────────────────────────────────────────────────────
+      addTask:    (t) => set((s) => ({ tasks: [t, ...s.tasks] })),
       toggleTask: (id) => set((s) => ({
         tasks: s.tasks.map((t) =>
-          t.id === id ? { ...t, done: !t.done, doneAt: !t.done ? new Date().toISOString() : undefined } : t,
+          t.id === id
+            ? { ...t, done: !t.done, doneAt: !t.done ? new Date().toISOString() : undefined }
+            : t,
         ),
       })),
       deleteTask: (id) => set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) })),
 
-      // ── Objectives ─────────────────────────────────────────────────────────
+      // ── Objectives ───────────────────────────────────────────────────────
       toggleObjective: (key) => set((s) => ({
         objectives: { ...s.objectives, [key]: !s.objectives[key] },
       })),
 
-      // ── Journal ────────────────────────────────────────────────────────────
-      addJournalEntry: (e) => set((s) => ({ journal: [e, ...s.journal] })),
+      // ── Journal ───────────────────────────────────────────────────────────
+      addJournalEntry:    (e) => set((s) => ({ journal: [e, ...s.journal] })),
       deleteJournalEntry: (id) => set((s) => ({
         journal: s.journal.filter((e) => e.id !== id),
       })),
 
-      // ── Settings ───────────────────────────────────────────────────────────
+      // ── Settings ──────────────────────────────────────────────────────────
       updateSettings: (s) => set((st) => ({
         settings: { ...st.settings, ...s },
       })),
 
-      // ── Streak ─────────────────────────────────────────────────────────────
+      // ── Streak ────────────────────────────────────────────────────────────
       recordActivity: () => {
         const today = new Date().toISOString().slice(0, 10);
         const { lastActiveDay, streak } = get();
@@ -144,14 +150,29 @@ export const useStore = create<AppState & StoreActions>()(
         yesterday.setDate(yesterday.getDate() - 1);
         const yKey = yesterday.toISOString().slice(0, 10);
         set({
-          streak: lastActiveDay === yKey ? streak + 1 : 1,
+          streak:       lastActiveDay === yKey ? streak + 1 : 1,
           lastActiveDay: today,
         });
       },
 
-      // ── Computed helpers ───────────────────────────────────────────────────
+      // ── Backup / restore ──────────────────────────────────────────────────
+      importData: (data) => set((s) => ({
+        templates:  data.templates  ?? s.templates,
+        habits:     data.habits     ?? s.habits,
+        habitLogs:  data.habitLogs  ?? s.habitLogs,
+        tasks:      data.tasks      ?? s.tasks,
+        objectives: data.objectives ?? s.objectives,
+        journal:    data.journal    ?? s.journal,
+        settings:   data.settings
+          ? { ...DEFAULT_SETTINGS, ...data.settings }
+          : s.settings,
+      })),
+
+      resetStore: () => set(INITIAL_STATE),
+
+      // ── Computed helpers ──────────────────────────────────────────────────
       getTodayTemplate: () => {
-        const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+        const days = ['sun','mon','tue','wed','thu','fri','sat'];
         const today = days[new Date().getDay()] as any;
         return get().templates.find((t) => t.days.includes(today));
       },
@@ -174,14 +195,13 @@ export const useStore = create<AppState & StoreActions>()(
 
       getGlobalProgress: () => {
         const { objectives } = get();
-        // 9 + 9 + 7 + 7 + 6 = 38 total objectives across 5 phases
         const total = 38;
-        const done = Object.values(objectives).filter(Boolean).length;
+        const done  = Object.values(objectives).filter(Boolean).length;
         return total > 0 ? Math.round((done / total) * 100) : 0;
       },
     }),
     {
-      name: 'flowday-app-state',
+      name:    'flowday-app-state',
       storage: createJSONStorage(() => mmkvStorage),
     },
   ),
