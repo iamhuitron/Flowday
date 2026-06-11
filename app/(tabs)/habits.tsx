@@ -142,7 +142,7 @@ function HabitStatsDrawer({
             <Text style={s.statsHabitDays}>
               {habit.targetDays.length === 7 ? 'Todos los días' : habit.targetDays.map((d) => ({
                 mon:'Lun',tue:'Mar',wed:'Mié',thu:'Jue',fri:'Vie',sat:'Sáb',sun:'Dom',
-              }[d]).join(' · ')}
+              })[d]).join(' · ')}
             </Text>
           </View>
           <TouchableOpacity onPress={onEdit} style={[s.editHabitBtn, { borderColor: color + '44', backgroundColor: color + '10' }]}>
