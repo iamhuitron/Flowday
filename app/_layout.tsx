@@ -1,7 +1,7 @@
 import '../global.css';
 import { useEffect, useRef } from 'react';
-import { Platform, View, StyleSheet, AppState } from 'react-native';
-import { Stack } from 'expo-router';
+import { Platform, StyleSheet, AppState } from 'react-native';
+import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import {
@@ -14,9 +14,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useStore } from '../src/store/index';
 import {
-  setupNotificationHandler,
-  createAndroidChannel,
-  rescheduleAll,
+  setupNotificationHandler, createAndroidChannel, rescheduleAll,
 } from '../src/utils/notifications';
 
 SplashScreen.preventAutoHideAsync();
@@ -30,7 +28,9 @@ export default function RootLayout() {
 
   const { templates, settings } = useStore();
   const appState = useRef(AppState.currentState);
+  const router   = useRouter();
 
+  // ── Notificaciones ────────────────────────────────────────────────────────
   useEffect(() => {
     setupNotificationHandler();
     createAndroidChannel();
@@ -42,18 +42,24 @@ export default function RootLayout() {
   }, [templates, settings.notificationsEnabled, settings.notifyActivities, settings.notifySummary]);
 
   useEffect(() => {
-    const sub = AppState.addEventListener('change', (nextState) => {
-      if (appState.current.match(/inactive|background/) && nextState === 'active') {
+    const sub = AppState.addEventListener('change', (next) => {
+      if (appState.current.match(/inactive|background/) && next === 'active') {
         rescheduleAll(templates, settings);
       }
-      appState.current = nextState;
+      appState.current = next;
     });
     return () => sub.remove();
   }, [templates, settings]);
 
+  // ── Redirigir al onboarding en primer arranque ────────────────────────────
   useEffect(() => {
-    if (fontsLoaded || fontError) SplashScreen.hideAsync();
-  }, [fontsLoaded, fontError]);
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
+      if (!settings.hasOnboarded) {
+        router.replace('/onboarding');
+      }
+    }
+  }, [fontsLoaded, fontError, settings.hasOnboarded]);
 
   if (!fontsLoaded && !fontError) return null;
 
@@ -69,10 +75,11 @@ export default function RootLayout() {
           }}
         >
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="onboarding"    options={{ animation: 'fade', gestureEnabled: false }} />
           <Stack.Screen name="template/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-          <Stack.Screen name="activity/[id]"  options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-          <Stack.Screen name="habit/[id]"     options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-          <Stack.Screen name="journal"         options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="activity/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="habit/[id]"    options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="journal"       options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
         </Stack>
       </SafeAreaProvider>
     </GestureHandlerRootView>

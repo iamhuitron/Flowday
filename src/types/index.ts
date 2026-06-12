@@ -1,4 +1,4 @@
-// ─── Activity / Schedule ────────────────────────────────────────────────────
+// ─── Activity / Schedule ─────────────────────────────────────────────────────
 
 export type ActivityCategory =
   | 'sleep' | 'wake' | 'training' | 'eating' | 'hygiene'
@@ -9,11 +9,11 @@ export interface Activity {
   name: string;
   description?: string;
   category: ActivityCategory;
-  startTime: string;     // "HH:mm"
-  duration: number;      // minutes
+  startTime: string;
+  duration: number;
   color?: string;
   icon?: string;
-  notifyBefore?: number; // minutes before, 0 = disabled
+  notifyBefore?: number;
 }
 
 export interface DayTemplate {
@@ -27,7 +27,7 @@ export interface DayTemplate {
 
 export type DayOfWeek = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
 
-// ─── Habit Tracker ──────────────────────────────────────────────────────────
+// ─── Habit Tracker ───────────────────────────────────────────────────────────
 
 export interface Habit {
   id: string;
@@ -40,11 +40,11 @@ export interface Habit {
 
 export interface HabitLog {
   habitId: string;
-  date: string;  // "YYYY-MM-DD"
+  date: string;
   done: boolean;
 }
 
-// ─── Road Map / Goals ───────────────────────────────────────────────────────
+// ─── Road Map / Goals ────────────────────────────────────────────────────────
 
 export interface RoadmapPhase {
   id: string;
@@ -76,29 +76,32 @@ export interface Task {
   priority?: 'low' | 'mid' | 'high';
 }
 
-// ─── Journal / Log ──────────────────────────────────────────────────────────
+// ─── Journal ─────────────────────────────────────────────────────────────────
 
 export interface JournalEntry {
   id: string;
-  date: string;  // "YYYY-MM-DD"
+  date: string;
   text: string;
   mood?: 1 | 2 | 3 | 4 | 5;
   tags?: string[];
 }
 
-// ─── App Settings ───────────────────────────────────────────────────────────
+// ─── App Settings ────────────────────────────────────────────────────────────
 
 export interface AppSettings {
   theme: 'dark' | 'light' | 'system';
   accentColor: string;
   firstDayOfWeek: DayOfWeek;
-  notificationsEnabled: boolean;  // Recordatorios de hábitos (9:00 AM)
-  notifyActivities: boolean;      // Alertas de actividad (notifyBefore)
-  notifySummary: boolean;         // Resumen diario (10:00 PM)
+  notificationsEnabled: boolean;
+  notifyActivities: boolean;
+  notifySummary: boolean;
   streakGoal: number;
+  // ── Onboarding ──
+  hasOnboarded: boolean;
+  userName: string;
 }
 
-// ─── Store root ─────────────────────────────────────────────────────────────
+// ─── Store root ──────────────────────────────────────────────────────────────
 
 export interface AppState {
   templates: DayTemplate[];
