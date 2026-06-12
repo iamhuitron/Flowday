@@ -338,7 +338,9 @@ export default function TodayScreen() {
         {/* ── Mood ── */}
         <View style={[s.secRow, { marginTop: 20 }]}>
           <Text style={s.secLabel}>¿Cómo te sientes?</Text>
-          {mood && <Text style={s.moodSaved}>Guardado ✓</Text>}
+          <TouchableOpacity onPress={() => router.push('/journal')}>
+          <Text style={s.secAction}>VER DIARIO →</Text>
+          </TouchableOpacity>
         </View>
         <View style={s.sectionWrap}>
           <View style={s.moodRow}>
