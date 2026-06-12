@@ -5,6 +5,7 @@ import {
   Sun, CalendarDays, Flame, TrendingUp, Settings2,
 } from 'lucide-react-native';
 import { useStore } from '../../src/store/index';
+import { useTheme } from '../../src/hooks/useTheme';
 
 const MONO = Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' });
 
@@ -18,38 +19,37 @@ const TABS = [
 
 // ─── Animated Tab Icon ────────────────────────────────────────────────────────
 function TabIcon({
-  Icon, focused, badge,
+  Icon, focused, badge, accent,
 }: {
   Icon: React.ComponentType<any>;
   focused: boolean;
   badge?: number;
+  accent: string;
 }) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const bgAnim    = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // FIX: llamadas separadas en vez de Animated.parallel con drivers distintos
+    // FIX: separate animations — no Animated.parallel con drivers distintos
     Animated.spring(scaleAnim, {
       toValue: focused ? 1.05 : 1,
-      useNativeDriver: true,   // solo transform → native driver OK
+      useNativeDriver: true,
       tension: 150,
       friction: 10,
     }).start();
-
     Animated.timing(bgAnim, {
       toValue: focused ? 1 : 0,
       duration: 200,
-      useNativeDriver: false,  // backgroundColor → JS driver OK
+      useNativeDriver: false,
     }).start();
   }, [focused]);
 
   const bgColor = bgAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['rgba(124,106,255,0)', 'rgba(124,106,255,0.15)'],
+    inputRange:  [0, 1],
+    outputRange: ['rgba(0,0,0,0)', accent + '26'],  // 15% opacidad del accent
   });
 
   return (
-    // FIX: dos Animated.View anidados — cada uno con un solo driver
     // Exterior: backgroundColor con JS driver
     <Animated.View style={[s.iconWrap, { backgroundColor: bgColor }]}>
       {/* Interior: transform con native driver */}
@@ -57,7 +57,7 @@ function TabIcon({
         <Icon
           size={22}
           strokeWidth={focused ? 2.2 : 1.8}
-          color={focused ? '#7c6aff' : '#55556a'}
+          color={focused ? accent : '#55556a'}
         />
         {badge && badge > 0 ? (
           <View style={s.badge}>
@@ -70,9 +70,9 @@ function TabIcon({
 }
 
 // ─── Tab Label ────────────────────────────────────────────────────────────────
-function TabLabel({ label, focused }: { label: string; focused: boolean }) {
+function TabLabel({ label, focused, accent }: { label: string; focused: boolean; accent: string }) {
   return (
-    <Text style={[s.label, focused && s.labelActive]}>
+    <Text style={[s.label, focused && { color: accent }]}>
       {label}
     </Text>
   );
@@ -81,6 +81,7 @@ function TabLabel({ label, focused }: { label: string; focused: boolean }) {
 // ─── Layout ───────────────────────────────────────────────────────────────────
 export default function TabLayout() {
   const { tasks, habits, habitLogs } = useStore();
+  const { accent }                   = useTheme();
 
   const today        = new Date().toISOString().slice(0, 10);
   const pendingTasks  = tasks.filter((t) => !t.done).length;
@@ -91,8 +92,8 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
-        tabBarStyle: s.tabBar,
+        headerShown:   false,
+        tabBarStyle:   s.tabBar,
         tabBarShowLabel: false,
       }}
     >
@@ -107,9 +108,11 @@ export default function TabLayout() {
             options={{
               tabBarIcon: ({ focused }) => (
                 <View style={s.tabItem}>
-                  <TabIcon Icon={Icon} focused={focused} badge={badge} />
-                  <TabLabel label={label} focused={focused} />
-                  {focused && <View style={s.activeDot} />}
+                  <TabIcon Icon={Icon} focused={focused} badge={badge} accent={accent} />
+                  <TabLabel label={label} focused={focused} accent={accent} />
+                  {focused && (
+                    <View style={[s.activeDot, { backgroundColor: accent }]} />
+                  )}
                 </View>
               ),
             }}
@@ -124,63 +127,59 @@ export default function TabLayout() {
 const s = StyleSheet.create({
   tabBar: {
     backgroundColor: '#141418',
-    borderTopColor: '#26262f',
-    borderTopWidth: 1,
-    height: Platform.OS === 'ios' ? 88 : 68,
-    paddingTop: 8,
-    paddingBottom: Platform.OS === 'ios' ? 28 : 10,
+    borderTopColor:  '#26262f',
+    borderTopWidth:  1,
+    height:          Platform.OS === 'ios' ? 88 : 68,
+    paddingTop:      8,
+    paddingBottom:   Platform.OS === 'ios' ? 28 : 10,
     paddingHorizontal: 4,
-    elevation: 0,
+    elevation:       0,
   },
   tabItem: {
     alignItems: 'center',
-    gap: 3,
+    gap:        3,
     paddingTop: 2,
   },
   iconWrap: {
-    width: 46,
-    height: 32,
-    borderRadius: 99,
-    alignItems: 'center',
+    width:          46,
+    height:         32,
+    borderRadius:   99,
+    alignItems:     'center',
     justifyContent: 'center',
-    position: 'relative',
+    position:       'relative',
   },
   label: {
     fontFamily: MONO,
-    fontSize: 9,
-    color: '#55556a',
+    fontSize:   9,
+    color:      '#55556a',
     letterSpacing: 0.04,
   },
-  labelActive: {
-    color: '#7c6aff',
-  },
   badge: {
-    position: 'absolute',
-    top: -2,
-    right: 2,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 99,
+    position:        'absolute',
+    top:             -2,
+    right:           2,
+    minWidth:        16,
+    height:          16,
+    borderRadius:    99,
     backgroundColor: '#f87171',
-    borderWidth: 2,
-    borderColor: '#141418',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderWidth:     2,
+    borderColor:     '#141418',
+    alignItems:      'center',
+    justifyContent:  'center',
     paddingHorizontal: 2,
   },
   badgeText: {
     fontFamily: MONO,
-    fontSize: 8,
-    color: '#fff',
+    fontSize:   8,
+    color:      '#fff',
     fontWeight: '700',
   },
   activeDot: {
-    position: 'absolute',
-    bottom: -6,
-    width: 18,
-    height: 3,
+    position:     'absolute',
+    bottom:       -6,
+    width:        18,
+    height:       3,
     borderRadius: 99,
-    backgroundColor: '#7c6aff',
-    opacity: 0.7,
+    opacity:      0.7,
   },
 });

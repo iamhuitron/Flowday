@@ -1,6 +1,5 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import { MMKV } from 'react-native-mmkv';
+import { persist } from 'zustand/middleware';
 import {
   AppState, DayTemplate, Habit, HabitLog,
   Task, JournalEntry, AppSettings,
@@ -8,68 +7,45 @@ import {
 import {
   DEFAULT_SETTINGS, DEFAULT_TEMPLATES, DEFAULT_HABITS,
 } from '@constants/index';
-
-// ─── MMKV storage adapter ────────────────────────────────────────────────────
-const storage = new MMKV({ id: 'flowday-store' });
-
-const mmkvStorage = {
-  getItem:    (key: string) => storage.getString(key) ?? null,
-  setItem:    (key: string, value: string) => storage.set(key, value),
-  removeItem: (key: string) => storage.delete(key),
-};
+import { platformStorage } from '@utils/storage';
 
 // ─── Store actions ───────────────────────────────────────────────────────────
 interface StoreActions {
-  // Templates
-  addTemplate:    (t: DayTemplate) => void;
-  updateTemplate: (t: DayTemplate) => void;
-  deleteTemplate: (id: string)     => void;
-
-  // Habits
-  addHabit:       (h: Habit)   => void;
-  updateHabit:    (h: Habit)   => void;
-  deleteHabit:    (id: string) => void;
-  toggleHabitLog: (habitId: string, date: string) => void;
-
-  // Tasks
-  addTask:    (t: Task)   => void;
-  toggleTask: (id: string) => void;
-  deleteTask: (id: string) => void;
-
-  // Objectives
-  toggleObjective: (key: string) => void;
-
-  // Journal
-  addJournalEntry:    (e: JournalEntry) => void;
-  deleteJournalEntry: (id: string)      => void;
-
-  // Settings
-  updateSettings: (s: Partial<AppSettings>) => void;
-
-  // Streak
-  recordActivity: () => void;
-
-  // Backup / restore
-  importData:  (data: Partial<AppState>) => void;
-  resetStore:  () => void;
-
-  // Computed helpers
-  getTodayTemplate:     () => DayTemplate | undefined;
-  getHabitLogsForDate:  (date: string) => HabitLog[];
-  getStreakForHabit:    (habitId: string) => number;
-  getGlobalProgress:    () => number;
+  addTemplate:         (t: DayTemplate)           => void;
+  updateTemplate:      (t: DayTemplate)           => void;
+  deleteTemplate:      (id: string)               => void;
+  addHabit:            (h: Habit)                 => void;
+  updateHabit:         (h: Habit)                 => void;
+  deleteHabit:         (id: string)               => void;
+  toggleHabitLog:      (habitId: string, date: string) => void;
+  addTask:             (t: Task)                  => void;
+  updateTask:          (t: Task)                  => void;
+  toggleTask:          (id: string)               => void;
+  deleteTask:          (id: string)               => void;
+  toggleObjective:     (key: string)              => void;
+  addJournalEntry:     (e: JournalEntry)          => void;
+  updateJournalEntry:  (e: JournalEntry)          => void;
+  deleteJournalEntry:  (id: string)               => void;
+  updateSettings:      (s: Partial<AppSettings>)  => void;
+  recordActivity:      ()                         => void;
+  importData:          (data: Partial<AppState>)  => void;
+  resetStore:          ()                         => void;
+  getTodayTemplate:    ()                         => DayTemplate | undefined;
+  getHabitLogsForDate: (date: string)             => HabitLog[];
+  getStreakForHabit:   (habitId: string)          => number;
+  getGlobalProgress:   ()                         => number;
 }
 
 // ─── Initial state ───────────────────────────────────────────────────────────
 const INITIAL_STATE: AppState = {
-  templates:    DEFAULT_TEMPLATES,
-  habits:       DEFAULT_HABITS,
-  habitLogs:    [],
-  tasks:        [],
-  objectives:   {},
-  journal:      [],
-  settings:     DEFAULT_SETTINGS,
-  streak:       0,
+  templates:     DEFAULT_TEMPLATES,
+  habits:        DEFAULT_HABITS,
+  habitLogs:     [],
+  tasks:         [],
+  objectives:    {},
+  journal:       [],
+  settings:      DEFAULT_SETTINGS,
+  streak:        0,
   lastActiveDay: null,
 };
 
@@ -79,20 +55,14 @@ export const useStore = create<AppState & StoreActions>()(
     (set, get) => ({
       ...INITIAL_STATE,
 
-      // ── Templates ────────────────────────────────────────────────────────
+      // ── Templates ─────────────────────────────────────────────────────────
       addTemplate:    (t) => set((s) => ({ templates: [...s.templates, t] })),
-      updateTemplate: (t) => set((s) => ({
-        templates: s.templates.map((x) => (x.id === t.id ? t : x)),
-      })),
-      deleteTemplate: (id) => set((s) => ({
-        templates: s.templates.filter((x) => x.id !== id),
-      })),
+      updateTemplate: (t) => set((s) => ({ templates: s.templates.map((x) => x.id === t.id ? t : x) })),
+      deleteTemplate: (id) => set((s) => ({ templates: s.templates.filter((x) => x.id !== id) })),
 
-      // ── Habits ───────────────────────────────────────────────────────────
-      addHabit:    (h) => set((s) => ({ habits: [...s.habits, h] })),
-      updateHabit: (h) => set((s) => ({
-        habits: s.habits.map((x) => (x.id === h.id ? h : x)),
-      })),
+      // ── Habits ────────────────────────────────────────────────────────────
+      addHabit:    (h)  => set((s) => ({ habits: [...s.habits, h] })),
+      updateHabit: (h)  => set((s) => ({ habits: s.habits.map((x) => x.id === h.id ? h : x) })),
       deleteHabit: (id) => set((s) => ({
         habits:    s.habits.filter((x) => x.id !== id),
         habitLogs: s.habitLogs.filter((x) => x.habitId !== id),
@@ -107,15 +77,14 @@ export const useStore = create<AppState & StoreActions>()(
             ),
           }));
         } else {
-          set((s) => ({
-            habitLogs: [...s.habitLogs, { habitId, date, done: true }],
-          }));
+          set((s) => ({ habitLogs: [...s.habitLogs, { habitId, date, done: true }] }));
         }
         get().recordActivity();
       },
 
       // ── Tasks ─────────────────────────────────────────────────────────────
-      addTask:    (t) => set((s) => ({ tasks: [t, ...s.tasks] })),
+      addTask:    (t)  => set((s) => ({ tasks: [t, ...s.tasks] })),
+      updateTask: (t)  => set((s) => ({ tasks: s.tasks.map((x) => x.id === t.id ? t : x) })),
       toggleTask: (id) => set((s) => ({
         tasks: s.tasks.map((t) =>
           t.id === id
@@ -125,20 +94,23 @@ export const useStore = create<AppState & StoreActions>()(
       })),
       deleteTask: (id) => set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) })),
 
-      // ── Objectives ───────────────────────────────────────────────────────
+      // ── Objectives ────────────────────────────────────────────────────────
       toggleObjective: (key) => set((s) => ({
         objectives: { ...s.objectives, [key]: !s.objectives[key] },
       })),
 
       // ── Journal ───────────────────────────────────────────────────────────
-      addJournalEntry:    (e) => set((s) => ({ journal: [e, ...s.journal] })),
+      addJournalEntry:    (e)  => set((s) => ({ journal: [e, ...s.journal] })),
+      updateJournalEntry: (e)  => set((s) => ({
+        journal: s.journal.map((x) => x.id === e.id ? e : x),
+      })),
       deleteJournalEntry: (id) => set((s) => ({
         journal: s.journal.filter((e) => e.id !== id),
       })),
 
       // ── Settings ──────────────────────────────────────────────────────────
-      updateSettings: (s) => set((st) => ({
-        settings: { ...st.settings, ...s },
+      updateSettings: (patch) => set((s) => ({
+        settings: { ...s.settings, ...patch },
       })),
 
       // ── Streak ────────────────────────────────────────────────────────────
@@ -148,14 +120,13 @@ export const useStore = create<AppState & StoreActions>()(
         if (lastActiveDay === today) return;
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
-        const yKey = yesterday.toISOString().slice(0, 10);
         set({
-          streak:       lastActiveDay === yKey ? streak + 1 : 1,
+          streak:        lastActiveDay === yesterday.toISOString().slice(0, 10) ? streak + 1 : 1,
           lastActiveDay: today,
         });
       },
 
-      // ── Backup / restore ──────────────────────────────────────────────────
+      // ── Backup ────────────────────────────────────────────────────────────
       importData: (data) => set((s) => ({
         templates:  data.templates  ?? s.templates,
         habits:     data.habits     ?? s.habits,
@@ -163,36 +134,30 @@ export const useStore = create<AppState & StoreActions>()(
         tasks:      data.tasks      ?? s.tasks,
         objectives: data.objectives ?? s.objectives,
         journal:    data.journal    ?? s.journal,
-        settings:   data.settings
-          ? { ...DEFAULT_SETTINGS, ...data.settings }
-          : s.settings,
+        settings:   data.settings   ? { ...DEFAULT_SETTINGS, ...data.settings } : s.settings,
       })),
-
       resetStore: () => set(INITIAL_STATE),
 
-      // ── Computed helpers ──────────────────────────────────────────────────
+      // ── Computed ──────────────────────────────────────────────────────────
       getTodayTemplate: () => {
         const days = ['sun','mon','tue','wed','thu','fri','sat'];
         const today = days[new Date().getDay()] as any;
         return get().templates.find((t) => t.days.includes(today));
       },
-
-      getHabitLogsForDate: (date) =>
-        get().habitLogs.filter((l) => l.date === date),
-
+      getHabitLogsForDate: (date) => get().habitLogs.filter((l) => l.date === date),
       getStreakForHabit: (habitId) => {
         const { habitLogs } = get();
         let streak = 0;
         const d = new Date();
         while (streak < 365) {
           const key = d.toISOString().slice(0, 10);
-          const log = habitLogs.find((l) => l.habitId === habitId && l.date === key);
-          if (log?.done) { streak++; d.setDate(d.getDate() - 1); }
-          else break;
+          if (habitLogs.find((l) => l.habitId === habitId && l.date === key)?.done) {
+            streak++;
+            d.setDate(d.getDate() - 1);
+          } else break;
         }
         return streak;
       },
-
       getGlobalProgress: () => {
         const { objectives } = get();
         const total = 38;
@@ -202,7 +167,7 @@ export const useStore = create<AppState & StoreActions>()(
     }),
     {
       name:    'flowday-app-state',
-      storage: createJSONStorage(() => mmkvStorage),
+      storage: platformStorage,   // ← plataforma automática (MMKV/localStorage)
     },
   ),
 );

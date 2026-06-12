@@ -31,24 +31,16 @@ export default function RootLayout() {
   const { templates, settings } = useStore();
   const appState = useRef(AppState.currentState);
 
-  // ── Inicializar notificaciones al arrancar ─────────────────────────────────
   useEffect(() => {
     setupNotificationHandler();
     createAndroidChannel();
     rescheduleAll(templates, settings);
   }, []);
 
-  // ── Reagendar cuando templates o settings cambian ─────────────────────────
   useEffect(() => {
     rescheduleAll(templates, settings);
-  }, [
-    templates,
-    settings.notificationsEnabled,
-    settings.notifyActivities,
-    settings.notifySummary,
-  ]);
+  }, [templates, settings.notificationsEnabled, settings.notifyActivities, settings.notifySummary]);
 
-  // ── Reagendar al volver a primer plano ────────────────────────────────────
   useEffect(() => {
     const sub = AppState.addEventListener('change', (nextState) => {
       if (appState.current.match(/inactive|background/) && nextState === 'active') {
@@ -59,7 +51,6 @@ export default function RootLayout() {
     return () => sub.remove();
   }, [templates, settings]);
 
-  // ── Splash ────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (fontsLoaded || fontError) SplashScreen.hideAsync();
   }, [fontsLoaded, fontError]);
@@ -81,12 +72,11 @@ export default function RootLayout() {
           <Stack.Screen name="template/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="activity/[id]"  options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="habit/[id]"     options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="journal"         options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
         </Stack>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
 
-const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0c0c0f' },
-});
+const s = StyleSheet.create({ root: { flex: 1, backgroundColor: '#0c0c0f' } });
