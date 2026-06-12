@@ -13,24 +13,25 @@ import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useStore } from '../src/store/index';
+import { ErrorBoundary } from '../src/components/ErrorBoundary';
 import {
   setupNotificationHandler, createAndroidChannel, rescheduleAll,
 } from '../src/utils/notifications';
 
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+function AppInner() {
+  const { templates, settings } = useStore();
+  const appStateRef = useRef(AppState.currentState);
+  const router      = useRouter();
+
   const [fontsLoaded, fontError] = useFonts({
     DMSans_300Light, DMSans_400Regular,
     DMSans_500Medium, DMSans_600SemiBold,
     DMSerifDisplay_400Regular,
   });
 
-  const { templates, settings } = useStore();
-  const appState = useRef(AppState.currentState);
-  const router   = useRouter();
-
-  // ── Notificaciones ────────────────────────────────────────────────────────
+  // Notificaciones
   useEffect(() => {
     setupNotificationHandler();
     createAndroidChannel();
@@ -43,15 +44,15 @@ export default function RootLayout() {
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', (next) => {
-      if (appState.current.match(/inactive|background/) && next === 'active') {
+      if (appStateRef.current.match(/inactive|background/) && next === 'active') {
         rescheduleAll(templates, settings);
       }
-      appState.current = next;
+      appStateRef.current = next;
     });
     return () => sub.remove();
   }, [templates, settings]);
 
-  // ── Redirigir al onboarding en primer arranque ────────────────────────────
+  // Splash + onboarding redirect
   useEffect(() => {
     if (fontsLoaded || fontError) {
       SplashScreen.hideAsync();
@@ -64,23 +65,31 @@ export default function RootLayout() {
   if (!fontsLoaded && !fontError) return null;
 
   return (
+    <Stack
+      screenOptions={{
+        headerShown:  false,
+        contentStyle: { backgroundColor: '#0c0c0f' },
+        animation:    Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+      }}
+    >
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="onboarding"    options={{ animation: 'fade', gestureEnabled: false }} />
+      <Stack.Screen name="template/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="activity/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="habit/[id]"    options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="journal"       options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+    </Stack>
+  );
+}
+
+export default function RootLayout() {
+  return (
     <GestureHandlerRootView style={s.root}>
       <SafeAreaProvider>
         <StatusBar style="light" backgroundColor="#0c0c0f" />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: '#0c0c0f' },
-            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-          }}
-        >
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="onboarding"    options={{ animation: 'fade', gestureEnabled: false }} />
-          <Stack.Screen name="template/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-          <Stack.Screen name="activity/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-          <Stack.Screen name="habit/[id]"    options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-          <Stack.Screen name="journal"       options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-        </Stack>
+        <ErrorBoundary>
+          <AppInner />
+        </ErrorBoundary>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
