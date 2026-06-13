@@ -10,6 +10,7 @@ import {
 } from '@expo-google-fonts/dm-sans';
 import { DMSerifDisplay_400Regular } from '@expo-google-fonts/dm-serif-display';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Notifications from 'expo-notifications';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useStore } from '../src/store/index';
@@ -20,10 +21,19 @@ import {
 
 SplashScreen.preventAutoHideAsync();
 
+// ─── Tab routes for notification tap routing ──────────────────────────────────
+function notifRoute(id: string, data: Record<string, any>): string {
+  if (id.startsWith('fd-act-') || data?.activityId) return '/(tabs)/schedule';
+  if (id === 'fd-habit-reminder')                    return '/(tabs)/habits';
+  if (id === 'fd-daily-summary')                     return '/(tabs)/habits';
+  return '/(tabs)';
+}
+
+// ─── App inner (uses hooks) ───────────────────────────────────────────────────
 function AppInner() {
   const { templates, settings } = useStore();
-  const appStateRef = useRef(AppState.currentState);
-  const router      = useRouter();
+  const appStateRef             = useRef(AppState.currentState);
+  const router                  = useRouter();
 
   const [fontsLoaded, fontError] = useFonts({
     DMSans_300Light, DMSans_400Regular,
@@ -31,7 +41,7 @@ function AppInner() {
     DMSerifDisplay_400Regular,
   });
 
-  // Notificaciones
+  // ── Notificaciones: setup + reagendado reactivo ───────────────────────────
   useEffect(() => {
     setupNotificationHandler();
     createAndroidChannel();
@@ -42,6 +52,7 @@ function AppInner() {
     rescheduleAll(templates, settings);
   }, [templates, settings.notificationsEnabled, settings.notifyActivities, settings.notifySummary]);
 
+  // ── Reagendar al volver a primer plano ────────────────────────────────────
   useEffect(() => {
     const sub = AppState.addEventListener('change', (next) => {
       if (appStateRef.current.match(/inactive|background/) && next === 'active') {
@@ -52,7 +63,19 @@ function AppInner() {
     return () => sub.remove();
   }, [templates, settings]);
 
-  // Splash + onboarding redirect
+  // ── Tap handler de notificaciones ─────────────────────────────────────────
+  useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const id   = response.notification.request.identifier;
+      const data = (response.notification.request.content.data ?? {}) as Record<string, any>;
+      const route = notifRoute(id, data);
+      // Pequeño delay para que la app esté lista antes de navegar
+      setTimeout(() => router.push(route as any), 300);
+    });
+    return () => sub.remove();
+  }, [router]);
+
+  // ── Splash + onboarding redirect ──────────────────────────────────────────
   useEffect(() => {
     if (fontsLoaded || fontError) {
       SplashScreen.hideAsync();
@@ -73,15 +96,17 @@ function AppInner() {
       }}
     >
       <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="onboarding"    options={{ animation: 'fade', gestureEnabled: false }} />
-      <Stack.Screen name="template/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-      <Stack.Screen name="activity/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-      <Stack.Screen name="habit/[id]"    options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-      <Stack.Screen name="journal"       options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="onboarding"    options={{ animation:'fade', gestureEnabled:false }} />
+      <Stack.Screen name="template/[id]" options={{ presentation:'modal', animation:'slide_from_bottom' }} />
+      <Stack.Screen name="activity/[id]" options={{ presentation:'modal', animation:'slide_from_bottom' }} />
+      <Stack.Screen name="habit/[id]"    options={{ presentation:'modal', animation:'slide_from_bottom' }} />
+      <Stack.Screen name="journal"       options={{ presentation:'modal', animation:'slide_from_bottom' }} />
+      <Stack.Screen name="+not-found"    options={{ animation:'fade' }} />
     </Stack>
   );
 }
 
+// ─── Root layout ──────────────────────────────────────────────────────────────
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={s.root}>
@@ -95,4 +120,4 @@ export default function RootLayout() {
   );
 }
 
-const s = StyleSheet.create({ root: { flex: 1, backgroundColor: '#0c0c0f' } });
+const s = StyleSheet.create({ root: { flex:1, backgroundColor:'#0c0c0f' } });
