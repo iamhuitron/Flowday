@@ -101,6 +101,7 @@ function AppInner() {
       <Stack.Screen name="activity/[id]" options={{ presentation:'modal', animation:'slide_from_bottom' }} />
       <Stack.Screen name="habit/[id]"    options={{ presentation:'modal', animation:'slide_from_bottom' }} />
       <Stack.Screen name="journal"       options={{ presentation:'modal', animation:'slide_from_bottom' }} />
+      <Stack.Screen name="widgets"       options={{ presentation:'modal', animation:'slide_from_bottom' }} />
       <Stack.Screen name="+not-found"    options={{ animation:'fade' }} />
     </Stack>
   );

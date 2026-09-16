@@ -1,4 +1,4 @@
-import { useRef, useCallback, useState } from 'react';
+import { useRef, useCallback, useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Platform, Animated, TextInput, Alert,
@@ -12,6 +12,8 @@ import { useTheme } from '../../src/hooks/useTheme';
 import { CATEGORY_COLORS, CATEGORY_ICONS } from '../../src/constants/index';
 import { Activity, Task } from '../../src/types/index';
 import { uid } from '../../src/utils/index';
+import { haptic } from '../../src/utils/haptics';
+import { syncWidgetData } from '../../src/utils/widget';
 
 const MONO  = Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' });
 const MOODS = ['😴', '😐', '🙂', '😊', '🔥'];
@@ -32,6 +34,118 @@ function StatCard({ label, value, sub, color }: { label:string; value:string; su
       <Text style={s.statLabel}>{label}</Text>
       <Text style={[s.statVal,{color}]}>{value}</Text>
       <Text style={s.statSub}>{sub}</Text>
+    </View>
+  );
+}
+
+// ─── Focus Timer ─────────────────────────────────────────────────────────────
+function FocusTimer({ activity, accent }: { activity: Activity; accent: string }) {
+  const [active, setActive] = useState(false);
+  const [mode, setMode] = useState<'25' | '50' | 'full'>('25');
+  const initialSeconds = mode === '25' ? 25 * 60 : mode === '50' ? 50 * 60 : activity.duration * 60;
+  const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
+  const [isPaused, setIsPaused] = useState(false);
+
+  useEffect(() => {
+    setSecondsLeft(initialSeconds);
+  }, [mode, initialSeconds]);
+
+  useEffect(() => {
+    let interval: any = null;
+    if (active && !isPaused && secondsLeft > 0) {
+      interval = setInterval(() => {
+        setSecondsLeft((s) => s - 1);
+      }, 1000);
+    } else if (secondsLeft === 0 && active) {
+      haptic('success');
+      Alert.alert('🎉 ¡Sesión de Foco Completada!', `Has completado tu sesión de foco en "${activity.name}".`);
+      setActive(false);
+    }
+    return () => clearInterval(interval);
+  }, [active, isPaused, secondsLeft, activity.name]);
+
+  const mins = Math.floor(secondsLeft / 60);
+  const secs = secondsLeft % 60;
+  const timeDisplay = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  const progressPct = Math.round(((initialSeconds - secondsLeft) / initialSeconds) * 100);
+
+  if (!active) {
+    return (
+      <TouchableOpacity
+        onPress={() => {
+          haptic('medium');
+          setActive(true);
+        }}
+        style={[s.focusStartBtn, { borderColor: accent + '33', backgroundColor: accent + '10' }]}
+        activeOpacity={0.8}
+      >
+        <Text style={{ fontSize: 13 }}>⚡</Text>
+        <Text style={[s.focusStartTxt, { color: accent }]}>MODO FOCUS / POMODORO</Text>
+      </TouchableOpacity>
+    );
+  }
+
+  return (
+    <View style={[s.focusCard, { borderColor: accent + '44' }]}>
+      <View style={s.focusHeader}>
+        <View style={s.focusBadge}>
+          <Text style={[s.focusBadgeTxt, { color: accent }]}>⚡ SESIÓN ACTIVA</Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => {
+            haptic('selection');
+            setActive(false);
+          }}
+          style={s.focusCloseBtn}
+        >
+          <Text style={s.focusCloseTxt}>✕</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={s.focusModeSelector}>
+        {(['25', '50', 'full'] as const).map((m) => (
+          <TouchableOpacity
+            key={m}
+            onPress={() => {
+              haptic('selection');
+              setMode(m);
+            }}
+            style={[s.focusModePill, mode === m && { backgroundColor: accent, borderColor: accent }]}
+          >
+            <Text style={[s.focusModePillTxt, mode === m && { color: '#0c0c0f', fontWeight: '700' }]}>
+              {m === '25' ? '25m' : m === '50' ? '50m' : `${activity.duration}m`}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <Text style={[s.focusTimerDigits, { color: accent }]}>{timeDisplay}</Text>
+
+      <View style={s.focusProgressTrack}>
+        <View style={[s.focusProgressFill, { width: `${progressPct}%` as any, backgroundColor: accent }]} />
+      </View>
+
+      <View style={s.focusActions}>
+        <TouchableOpacity
+          onPress={() => {
+            haptic('impact');
+            setIsPaused(!isPaused);
+          }}
+          style={[s.focusActionBtn, { backgroundColor: isPaused ? '#4ade80' : '#fbbf24' }]}
+        >
+          <Text style={s.focusActionTxt}>{isPaused ? '▶ REANUDAR' : '⏸ PAUSAR'}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => {
+            haptic('success');
+            setActive(false);
+          }}
+          style={[s.focusActionBtn, { backgroundColor: '#262633' }]}
+        >
+          <Text style={[s.focusActionTxt, { color: '#eeeef5' }]}>TERMINAR</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -58,6 +172,8 @@ function NowCard({ activity, next, accent }: { activity:Activity; next?:Activity
           </View>
           <Text style={s.nowPct}>{pct}%</Text>
         </View>
+
+        <FocusTimer activity={activity} accent={accent} />
       </View>
       {next && (
         <View style={s.nextCard}>
@@ -222,6 +338,10 @@ export default function TodayScreen() {
     addJournalEntry({ id:`mood-${today}`, date:today, text:'', mood:moodNum, tags:['mood'] });
   },[today,todayMoodEntry,addJournalEntry,deleteJournalEntry]);
 
+  useEffect(() => {
+    syncWidgetData(template, habits, habitLogs, streak);
+  }, [template, habits, habitLogs, streak]);
+
   const now        = new Date();
   const hour       = now.getHours();
   const greeting   = hour<12?'Buenos días':hour<18?'Buenas tardes':'Buenas noches';
@@ -237,9 +357,22 @@ export default function TodayScreen() {
           <Text style={s.dateStr}>{dateStr}</Text>
           <Text style={s.greeting}>{greeting}, {userName} 👋</Text>
         </View>
-        <View style={[s.streakBadge,{borderColor:accent+'40',backgroundColor:accent+'12'}]}>
-          <Text style={[s.streakNum,{color:accent}]}>{streak}</Text>
-          <Text style={[s.streakLbl,{color:accent+'aa'}]}>días 🔥</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <TouchableOpacity
+            onPress={() => {
+              haptic('light');
+              router.push('/widgets');
+            }}
+            style={[s.widgetBadge, { borderColor: accent + '40', backgroundColor: accent + '12' }]}
+            activeOpacity={0.75}
+          >
+            <Text style={{ fontSize: 13 }}>📱</Text>
+            <Text style={[s.widgetBadgeTxt, { color: accent }]}>Widgets</Text>
+          </TouchableOpacity>
+          <View style={[s.streakBadge, { borderColor: accent + '40', backgroundColor: accent + '12' }]}>
+            <Text style={[s.streakNum, { color: accent }]}>{streak}</Text>
+            <Text style={[s.streakLbl, { color: accent + 'aa' }]}>días 🔥</Text>
+          </View>
         </View>
       </View>
 
@@ -450,4 +583,23 @@ const s = StyleSheet.create({
   tlPast:             {color:'#55556a',textDecorationLine:'line-through'},
   tlCurrent:          {fontWeight:'600'},
   tlDur:              {fontFamily:MONO,fontSize:10,color:'#55556a'},
+  widgetBadge:        {flexDirection:'row',alignItems:'center',gap:5,borderWidth:1,borderRadius:99,paddingHorizontal:10,paddingVertical:5},
+  widgetBadgeTxt:     {fontFamily:MONO,fontSize:11,fontWeight:'700',letterSpacing:0.5},
+  focusStartBtn:      {flexDirection:'row',alignItems:'center',justifyContent:'center',gap:6,borderWidth:1,borderRadius:10,paddingVertical:9,marginTop:12},
+  focusStartTxt:      {fontFamily:MONO,fontSize:10,fontWeight:'700',letterSpacing:1},
+  focusCard:          {backgroundColor:'#121216',borderWidth:1,borderRadius:12,padding:14,marginTop:12},
+  focusHeader:        {flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginBottom:10},
+  focusBadge:         {paddingHorizontal:6,paddingVertical:2,borderRadius:6,backgroundColor:'rgba(255,255,255,0.05)'},
+  focusBadgeTxt:      {fontFamily:MONO,fontSize:9,fontWeight:'700',letterSpacing:1},
+  focusCloseBtn:      {padding:4},
+  focusCloseTxt:      {fontSize:14,color:'#77778a'},
+  focusModeSelector:  {flexDirection:'row',gap:6,marginBottom:12},
+  focusModePill:      {flex:1,paddingVertical:6,borderRadius:8,borderWidth:1,borderColor:'#262633',alignItems:'center'},
+  focusModePillTxt:   {fontFamily:MONO,fontSize:10,color:'#888899'},
+  focusTimerDigits:   {fontFamily:MONO,fontSize:30,fontWeight:'800',textAlign:'center',marginVertical:6,letterSpacing:2},
+  focusProgressTrack: {height:4,backgroundColor:'#262633',borderRadius:2,overflow:'hidden',marginBottom:12},
+  focusProgressFill:  {height:'100%',borderRadius:2},
+  focusActions:       {flexDirection:'row',gap:8},
+  focusActionBtn:     {flex:1,paddingVertical:9,borderRadius:8,alignItems:'center',justifyContent:'center'},
+  focusActionTxt:     {fontFamily:MONO,fontSize:11,fontWeight:'700',color:'#000',letterSpacing:0.5},
 });

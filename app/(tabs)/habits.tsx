@@ -1,4 +1,4 @@
-import { useRef, useCallback, useState } from 'react';
+import { useRef, useCallback, useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Platform, Animated, Alert,
@@ -10,6 +10,7 @@ import { useStore } from '../../src/store/index';
 import { useTheme } from '../../src/hooks/useTheme';
 import { haptic } from '../../src/utils/haptics';
 import { Habit } from '../../src/types/index';
+import { syncWidgetData } from '../../src/utils/widget';
 
 const MONO = Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' });
 
@@ -259,7 +260,7 @@ function WeekStrip({ accent }: { accent: string }) {
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function HabitsScreen() {
-  const { habits, habitLogs, getStreakForHabit, deleteHabit } = useStore();
+  const { habits, habitLogs, getStreakForHabit, deleteHabit, toggleHabitLog, streak, getTodayTemplate } = useStore();
   const { accent } = useTheme();
   const router     = useRouter();
 
@@ -276,6 +277,20 @@ export default function HabitsScreen() {
   });
   const weekAvg    = Math.round(last7Pct.reduce((a,b)=>a+b,0)/7);
   const bestStreak = Math.max(0, ...habits.map((h) => getStreakForHabit(h.id)));
+
+  useEffect(() => {
+    syncWidgetData(getTodayTemplate(), habits, habitLogs, streak);
+  }, [habits, habitLogs, streak]);
+
+  const handleCompleteAllToday = useCallback(() => {
+    haptic('success');
+    habits.forEach((h) => {
+      const isDone = habitLogs.some((l) => l.habitId === h.id && l.date === td && l.done);
+      if (!isDone) {
+        toggleHabitLog(h.id, td);
+      }
+    });
+  }, [habits, habitLogs, td, toggleHabitLog]);
 
   const now      = new Date();
   const months   = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
@@ -353,7 +368,14 @@ export default function HabitsScreen() {
       </View>
 
       <ScrollView style={s.scroll} contentContainerStyle={{ paddingBottom:100 }} showsVerticalScrollIndicator={false}>
-        <Text style={s.secLabel}>HOY · mantén presionado para editar</Text>
+        <View style={s.secHeaderRow}>
+          <Text style={s.secLabel}>HOY · mantén presionado para editar</Text>
+          {doneTodayCount < habits.length && habits.length > 0 ? (
+            <TouchableOpacity onPress={handleCompleteAllToday} style={s.completeAllBtn} activeOpacity={0.8}>
+              <Text style={s.completeAllTxt}>⚡ COMPLETAR TODOS</Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
         {habits.map((h) => (
           <HabitCard key={h.id} habit={h}
             onLongPress={() => handleLongPress(h)}
@@ -409,6 +431,9 @@ const s = StyleSheet.create({
   statVal:        { fontFamily:MONO, fontSize:20, fontWeight:'700' },
   statSub:        { fontSize:10, color:'#55556a', marginTop:3 },
   scroll:         { flex:1 },
+  secHeaderRow:   { flexDirection:'row', justifyContent:'space-between', alignItems:'center', paddingRight:20 },
+  completeAllBtn: { paddingHorizontal:8, paddingVertical:4, borderRadius:6, backgroundColor:'rgba(74,222,128,0.1)', borderWidth:1, borderColor:'rgba(74,222,128,0.3)' },
+  completeAllTxt: { fontFamily:MONO, fontSize:9, fontWeight:'700', color:'#4ade80', letterSpacing:0.8 },
   secLabel:       { fontFamily:MONO, fontSize:9, color:'#55556a', letterSpacing:0.12, paddingHorizontal:20, paddingTop:14, paddingBottom:8 },
   habitCard:      { borderRadius:14, borderWidth:1, padding:14, flexDirection:'row', alignItems:'center', gap:12 },
   habitIconWrap:  { width:38, height:38, borderRadius:10, backgroundColor:'#1c1c22', alignItems:'center', justifyContent:'center', flexShrink:0 },

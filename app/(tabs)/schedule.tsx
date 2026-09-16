@@ -12,6 +12,7 @@ import { useTheme } from '../../src/hooks/useTheme';
 import { CATEGORY_COLORS, CATEGORY_ICONS } from '../../src/constants/index';
 import { Activity } from '../../src/types/index';
 import { timeToMinutes, formatDuration, minutesToTime } from '../../src/utils/index';
+import { syncWidgetData } from '../../src/utils/widget';
 
 const MONO       = Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' });
 const PX_PER_MIN = 1.05;
@@ -149,7 +150,7 @@ function ActivityDrawer({ activity, visible, onClose, onEdit, onDelete, accent }
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function ScheduleScreen() {
-  const { templates, updateTemplate } = useStore();
+  const { templates, updateTemplate, habits, habitLogs, streak, getTodayTemplate } = useStore();
   const { accent }                    = useTheme();
   const router                        = useRouter();
   const scrollRef                     = useRef<ScrollView>(null);
@@ -158,6 +159,10 @@ export default function ScheduleScreen() {
   const [drawerOpen,  setDrawerOpen]  = useState(false);
 
   const activeTemplate = templates.find((t) => t.id === activeId) ?? templates[0];
+
+  useEffect(() => {
+    syncWidgetData(getTodayTemplate(), habits, habitLogs, streak);
+  }, [templates, habits, habitLogs, streak]);
 
   useEffect(() => {
     const y = Math.max(0, (getNowMins() - 120) * PX_PER_MIN);

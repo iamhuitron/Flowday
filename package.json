@@ -1,6 +1,7 @@
 {
   "name": "flowday",
-  "version": "0.1.0",
+  "version": "3.0.0",
+  "description": "FlowDay — The Ultimate Productivity OS: Time-Blocking, Habits & Focus",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",

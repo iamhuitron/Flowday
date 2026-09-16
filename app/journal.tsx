@@ -218,14 +218,47 @@ export default function JournalScreen() {
 
   const [editorVisible, setEditorVisible] = useState(false);
   const [editingEntry,  setEditingEntry]  = useState<Partial<JournalEntry> | null>(null);
+  const [searchQuery,   setSearchQuery]   = useState('');
 
   // Entries that are actual journal entries (not just mood-only)
   const realEntries = journal
     .filter((e) => e.text.trim().length > 0 || (e.tags && !e.tags.every((t) => t === 'mood')))
     .sort((a, b) => b.date.localeCompare(a.date));
 
+  const filteredEntries = realEntries.filter((e) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return e.text.toLowerCase().includes(q) || (e.tags && e.tags.some((t) => t.toLowerCase().includes(q)));
+  });
+
+  const handleExportJournal = useCallback(async () => {
+    if (realEntries.length === 0) {
+      Alert.alert('Diario vacío', 'No hay entradas registradas aún para exportar.');
+      return;
+    }
+    const content = realEntries.map((e) => {
+      const moodStr = e.mood ? MOODS[e.mood - 1] : 'Sin mood';
+      return `📅 ${e.date} (${moodStr})\n${e.text}\nEtiquetas: ${(e.tags ?? []).join(', ')}\n\n───────────────────\n`;
+    }).join('\n');
+
+    try {
+      if (Platform.OS !== 'web') {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { Share } = require('react-native');
+        await Share.share({
+          title: 'FlowDay — Copia de Diario',
+          message: content,
+        });
+      } else {
+        Alert.alert('Exportación de Diario', content);
+      }
+    } catch (err: any) {
+      Alert.alert('Error', err?.message ?? 'No se pudo compartir.');
+    }
+  }, [realEntries]);
+
   // Group by month
-  const grouped = realEntries.reduce<Record<string, JournalEntry[]>>((acc, e) => {
+  const grouped = filteredEntries.reduce<Record<string, JournalEntry[]>>((acc, e) => {
     const key = e.date.slice(0, 7); // "YYYY-MM"
     if (!acc[key]) acc[key] = [];
     acc[key].push(e);
@@ -314,9 +347,14 @@ export default function JournalScreen() {
           <Text style={s.headerTitle}>Diario</Text>
           <Text style={s.headerSub}>{totalEntries} ENTRADAS · {moodDays} DÍAS CON ESTADO</Text>
         </View>
-        <TouchableOpacity onPress={openNew} style={s.newBtn}>
-          <Text style={s.newBtnTxt}>+</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <TouchableOpacity onPress={handleExportJournal} style={s.exportBtn} activeOpacity={0.75}>
+            <Text style={{ fontSize: 16 }}>📤</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={openNew} style={s.newBtn}>
+            <Text style={s.newBtnTxt}>+</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
@@ -340,6 +378,22 @@ export default function JournalScreen() {
             </Text>
             <Text style={s.statLbl}>HOY</Text>
           </View>
+        </View>
+
+        {/* Search Bar */}
+        <View style={s.searchBarWrap}>
+          <TextInput
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Buscar en el diario o por etiqueta..."
+            placeholderTextColor="#55556a"
+            style={s.searchInput}
+          />
+          {searchQuery ? (
+            <TouchableOpacity onPress={() => setSearchQuery('')} style={s.clearSearchBtn}>
+              <Text style={{ color: '#888899', fontSize: 12 }}>✕</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
 
         {/* Today CTA if no entry */}
@@ -458,8 +512,9 @@ const s = StyleSheet.create({
   moodLabel:         { fontFamily: MONO, fontSize: 7, textAlign: 'center' },
   editorTagsRow:     { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 16 },
   tagChip:           { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 99, borderWidth: 1, borderColor: '#26262f', backgroundColor: '#1a1a1f' },
-  tagChipActive:     { borderColor: '#7c6aff', backgroundColor: 'rgba(124,106,255,.12)' },
-  tagChipTxt:        { fontSize: 12, color: '#55556a' },
-  tagChipTxtActive:  { color: '#7c6aff' },
   editorInput:       { backgroundColor: '#1a1a1f', borderWidth: 1, borderColor: '#26262f', borderRadius: 12, padding: 14, color: '#eeeef5', fontSize: 14, lineHeight: 22, minHeight: 120 },
+  exportBtn:         { width: 34, height: 34, borderRadius: 10, backgroundColor: '#141418', borderWidth: 1, borderColor: '#26262f', alignItems: 'center', justifyContent: 'center' },
+  searchBarWrap:     { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginTop: 14, marginBottom: 8, backgroundColor: '#141418', borderWidth: 1, borderColor: '#26262f', borderRadius: 12, paddingHorizontal: 12 },
+  searchInput:       { flex: 1, paddingVertical: 10, color: '#eeeef5', fontSize: 13 },
+  clearSearchBtn:    { padding: 6 },
 });

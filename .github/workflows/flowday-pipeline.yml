@@ -1,15 +1,20 @@
-name: Flowday CI (Only Android APK)
+name: Flowday CI (Android APK & Release)
 
 on:
   push:
     branches:
       - main
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 jobs:
   build-android:
-    name: 🤖 Build Android APK
+    name: 🤖 Build Android APK & Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     steps:
       - name: 📥 Clonar repositorio
         uses: actions/checkout@v4
@@ -63,3 +68,47 @@ jobs:
         with:
           name: flowday-app-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: 📦 Preparar APK para Release
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk ./flowday-v3.0.0.apk
+
+      - name: 🚀 Publicar GitHub Release Oficial
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v2
+        with:
+          name: FlowDay ${{ github.ref_name }} — Release Oficial Android APK
+          tag_name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          body: |
+            ## 🌟 FlowDay v3.0.0 — The Ultimate Productivity OS
+
+            ¡Lanzamiento oficial de **FlowDay v3.0.0** para Android! Esta versión eleva la experiencia de productividad personal con diseño premium, widgets para la pantalla de inicio y temporizador de concentración en tiempo real.
+
+            ---
+
+            ### 📱 Novedades Destacadas en esta Versión:
+            - **Widgets Móviles Nativos**:
+              - Widget 4x2: *Bloque de Foco Actual* con barra de progreso en vivo, hora de fin y próxima actividad.
+              - Widget 2x2 / 4x1: *Racha y Hábitos Diarios* con contador de días 🔥 y tasa de hábitos completados.
+              - Centro de Control de Widgets integrado en la app con guía paso a paso para Android e iOS.
+            - **Modo Focus / Pomodoro en Vivo**:
+              - Temporizador de concentración circular para la actividad en curso con modos de 25 min (Pomodoro), 50 min (Deep Work) o duración personalizada del bloque.
+              - Controles de pausa/reanudación y feedback háptico.
+            - **Evolución del Gestor de Hábitos**:
+              - Acción masiva *⚡ Completar todos hoy*.
+              - Gráfico de consistencia de 35 días, racha récord histórica y tasa semanal.
+            - **Diario y Reflexión Personal**:
+              - Buscador en tiempo real de notas y tags.
+              - Función de exportación de reflexiones a texto/markdown para compartir o respaldar.
+            - **Arquitectura y Rendimiento**:
+              - Estandarización a Expo Router 4 y Expo 52.
+              - Optimización de persistencia local offline-first ultra rápida con MMKV y Zustand.
+
+            ---
+
+            ### 📥 Instalación Directa:
+            Descarga el archivo adjunto **`flowday-v3.0.0.apk`** e instálalo directamente en tu teléfono Android.
+          files: |
+            flowday-v3.0.0.apk

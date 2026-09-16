@@ -2,7 +2,7 @@
   "expo": {
     "name": "FlowDay",
     "slug": "flowday",
-    "version": "0.1.0",
+    "version": "3.0.0",
     "orientation": "portrait",
     "icon": "./src/assets/icons/icon.png",
     "userInterfaceStyle": "automatic",
@@ -17,6 +17,7 @@
       "bundleIdentifier": "com.iamhuitron.flowday"
     },
     "android": {
+      "versionCode": 3,
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/icons/icon.png",
         "backgroundColor": "#0f0f11"
@@ -30,6 +31,7 @@
       "favicon": "./src/assets/icons/favicon.png"
     },
     "plugins": [
+      "./plugins/withAndroidWidgets",
       "expo-router",
       "expo-font",
       [

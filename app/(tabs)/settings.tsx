@@ -4,6 +4,7 @@ import {
   StyleSheet, Platform, Switch, Alert, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { useStore }        from '../../src/store/index';
 import { useTheme }        from '../../src/hooks/useTheme';
 import { AppSettings }     from '../../src/types/index';
@@ -87,6 +88,7 @@ function AccentPicker({ selected, onSelect, accent }:
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function SettingsScreen() {
+  const router = useRouter();
   const {
     settings, templates, habits, habitLogs, tasks, objectives, journal,
     updateSettings, importData, resetStore,
@@ -239,6 +241,15 @@ export default function SettingsScreen() {
           />
         </Section>
 
+        {/* ── Widgets Móviles ── */}
+        <Section label="WIDGETS Y PANTALLA DE INICIO">
+          <Row icon="📱" iconBg={accent+'18'}
+            label="Centro de Widgets Móviles" sub="Actividad actual, racha y guía para Android/iOS"
+            right={<Text style={s.arrow}>›</Text>}
+            onPress={() => router.push('/widgets')}
+          />
+        </Section>
+
         {/* ── Apariencia ── */}
         <Section label="APARIENCIA">
           <Row icon="🎨" iconBg={accent+'18'} label="Color de acento"
@@ -271,7 +282,7 @@ export default function SettingsScreen() {
 
         {/* ── Acerca de ── */}
         <Section label="ACERCA DE">
-          <Row icon="⚡" iconBg={accent+'18'} label="Versión" right={<Chip label="v0.1.0" color={accent}/>}/>
+          <Row icon="⚡" iconBg={accent+'18'} label="Versión" right={<Chip label="v3.0.0" color={accent}/>}/>
           <View style={s.divider}/>
           <Row icon="🐙" iconBg="rgba(255,255,255,.04)" label="GitHub" sub="iamhuitron/flowday" right={<Text style={s.arrow}>›</Text>}/>
           <View style={s.divider}/>
