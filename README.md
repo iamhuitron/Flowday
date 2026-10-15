@@ -1,4 +1,4 @@
-# FlowDay — The Ultimate Productivity OS
+# FlowDay — Offline-First Cross-Platform Productivity & Focus Suite
 
 <p align="left">
   <strong>Offline-First Cross-Platform Productivity Suite, Time-Blocking, Habit Architecture & Live Focus</strong><br>
@@ -16,7 +16,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL_v3-emerald?style=flat-square" alt="License" /></a>
 </p>
 
-> **Your routine, your habits, your focus and your life path — all in one offline-first application.** Mobile and web application built with **React Native + Expo (SDK 52, New Architecture)**, featuring sub-millisecond MMKV persistence, home screen widgets, live pomodoro/focus sessions, and automated signed APK delivery via GitHub Actions.
+> **Time-blocking, habits, and focus management in an offline-first mobile architecture.** Cross-platform mobile and web application built with **React Native + Expo (SDK 52, New Architecture)**, featuring sub-millisecond MMKV persistence, home screen widgets, live pomodoro/focus sessions, and automated signed APK delivery via GitHub Actions.
 
 ---
 
