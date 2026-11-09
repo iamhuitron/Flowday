@@ -6,17 +6,27 @@
 </p>
 
 <p align="left">
-  <a href="https://github.com/iamhuitron/flowday/releases/latest"><img src="https://img.shields.io/badge/Download_APK-FlowDay_v3.0.0-7c6aff?style=flat-square&logo=android&logoColor=white" alt="Download APK" /></a>
-  <a href="https://flowday-rho.vercel.app/"><img src="https://img.shields.io/badge/Web_Demo-flowday--rho.vercel.app-059669?style=flat-square&logo=vercel&logoColor=white" alt="Web Demo" /></a>
-  <a href="https://github.com/iamhuitron"><img src="https://img.shields.io/badge/Author-@iamhuitron-1e293b?style=flat-square&logo=github&logoColor=white" alt="Author" /></a>
-  <a href="https://github.com/Xaol-Studio"><img src="https://img.shields.io/badge/Studio-@Xaol--Studio-059669?style=flat-square&logo=github&logoColor=white" alt="Studio" /></a>
-  <img src="https://img.shields.io/badge/React_Native-Expo_SDK_52-61DAFB?style=flat-square&logo=react&logoColor=black" alt="Expo SDK 52" />
-  <img src="https://img.shields.io/badge/Widgets-Android_&_iOS-fbbf24?style=flat-square" alt="Widgets" />
-  <img src="https://img.shields.io/badge/Storage-MMKV_(Sub--ms)-blue?style=flat-square" alt="MMKV" />
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL_v3-emerald?style=flat-square" alt="License" /></a>
+  <a href="https://github.com/iamhuitron/flowday/releases/latest"><img src="https://img.shields.io/badge/DOWNLOAD_APK-FlowDay_v3.0.0-B89758?style=for-the-badge&logo=android&logoColor=FAF8F5&labelColor=141210" alt="Download APK" /></a>
+  <a href="https://flowday-rho.vercel.app/"><img src="https://img.shields.io/badge/WEB_DEMO-flowday--rho.vercel.app-1D1A16?style=for-the-badge&logo=vercel&logoColor=D4B87A&labelColor=141210" alt="Web Demo" /></a>
+  <a href="https://github.com/iamhuitron"><img src="https://img.shields.io/badge/AUTHOR-@iamhuitron-1D1A16?style=for-the-badge&logo=github&logoColor=D4B87A&labelColor=141210" alt="Author" /></a>
+</p>
+
+<p align="left">
+  <img src="https://img.shields.io/badge/React_Native-Expo_SDK_52-1D1A16?style=flat-square&logo=react&logoColor=D4B87A&labelColor=141210" alt="Expo SDK 52" />
+  <img src="https://img.shields.io/badge/Widgets-Android_&_iOS-1D1A16?style=flat-square&labelColor=141210&logoColor=D4B87A" alt="Widgets" />
+  <img src="https://img.shields.io/badge/Storage-MMKV_(Sub--ms)-1B3B2B?style=flat-square&labelColor=141210&logoColor=D4B87A" alt="MMKV" />
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL_v3-1D1A16?style=flat-square&labelColor=141210&logoColor=D4B87A" alt="License" /></a>
 </p>
 
 > **Time-blocking, habits, and focus management in an offline-first mobile architecture.** Cross-platform mobile and web application built with **React Native + Expo (SDK 52, New Architecture)**, featuring sub-millisecond MMKV persistence, home screen widgets, live pomodoro/focus sessions, and automated signed APK delivery via GitHub Actions.
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#141210', 'primaryTextColor': '#FAF8F5', 'primaryBorderColor': '#B89758', 'lineColor': '#B89758', 'secondaryColor': '#1D1A16', 'tertiaryColor': '#0D0C0A', 'mainBkg': '#141210', 'nodeBorder': '#B89758', 'clusterBkg': '#0D0C0A', 'clusterBorder': '#262420', 'titleColor': '#D4B87A', 'edgeLabelBackground': '#141210', 'fontFamily': 'JetBrains Mono, Plus Jakarta Sans, sans-serif' }}}%%
+flowchart LR
+    A["Expo Router v4 UI<br/>(Today · Schedule · Habits · Goals)"] --> B["Zustand v5 Store<br/>(Deterministic State Machine)"]
+    B --> C["react-native-mmkv<br/>(Sub-ms C++ JSI Persistence)"]
+    B --> D["Expo Config Plugin<br/>(Kotlin Android AppWidgets 4x2 / 2x2)"]
+```
 
 ---
 
